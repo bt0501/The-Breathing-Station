@@ -69,7 +69,13 @@
         .pulse-label { color: #848e9c; }
         .pulse-value { font-weight: bold; }
 
-        .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 8px; background: #181a20; }
+       .btn-group { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr 1fr; /* Добавили еще одну колонку */
+    gap: 8px; 
+    padding: 8px; 
+    background: #181a20; 
+}
         .nav-btn { background: #2b2f36; color: white; border: 1px solid #3d434d; padding: 8px; border-radius: 6px; cursor: pointer; font-size: 0.7rem; font-weight: bold; }
         
         @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(242, 54, 69, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(242, 54, 69, 0); } 100% { box-shadow: 0 0 0 0 rgba(242, 54, 69, 0); } }
@@ -126,6 +132,7 @@
             <div class="btn-group">
                 <button class="nav-btn" onclick="window.open('https://aggr.trade/t5k8')">AGGR.TRADE 🔊</button>
                 <button class="nav-btn" onclick="window.open('https://www.coinglass.com/pro/futures/LiquidationMap')">COINGLASS 🔥</button>
+                <button class="nav-btn" onclick="window.open('https://www.tensorcharts.com/')">TENSORCHARTS 📊</button>
             </div>
         </div>
 
