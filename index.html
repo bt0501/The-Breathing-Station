@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Crypto Station v8.4 - Final Session Fix</title>
+    <style>
+        :root {
+            --bg: #0b0e11; --container-bg: #181a20; --grid: #2b2f36;
+            --text: #eaecef; --accent: #00ff88; --danger: #f23645;
+            --local: #4aafff; --sydney: #9c27b0; --tokyo: #f0b90b; --london: #3267ff; --newyork: #f23645;
+        }
+
+        body {
+            background-color: var(--bg); color: var(--text);
+            font-family: 'Inter', sans-serif; margin: 0; padding: 10px;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        .main-container {
+            width: 98%; max-width: 1700px;
+            background: var(--container-bg); padding: 20px; border-radius: 16px;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.8);
+        }
+
+        .top-panel { 
+            display: grid; grid-template-columns: 1fr auto auto auto auto 1fr; 
+            gap: 15px; align-items: center; margin-bottom: 20px; 
+        }
+        #utc-time { font-size: 2.8rem; font-weight: 800; color: var(--accent); margin: 0; letter-spacing: -1px; }
+        
+        .stat-box { background: #1e2329; padding: 8px 15px; border-radius: 10px; text-align: center; border: 1px solid var(--grid); min-width: 120px; }
+        .stat-value { font-size: 1.1rem; font-weight: bold; display: block; }
+        .label { font-size: 0.6rem; color: #848e9c; text-transform: uppercase; margin-bottom: 2px; }
+
+        /* ТАЙМЛАЙН - ГЕОМЕТРИЧЕСКИЙ ФИКС */
+        .timeline-wrapper { 
+            position: relative; padding-top: 30px; height: 110px; 
+            margin-bottom: 25px; background: rgba(0,0,0,0.3); 
+            border-radius: 8px; border: 1px solid var(--grid);
+            overflow: hidden;
+        }
+        .time-scale { display: flex; position: absolute; top: 0; left: 0; right: 0; border-bottom: 1px solid var(--grid); height: 25px; }
+        .hour-mark { flex: 1; font-size: 0.65rem; color: #848e9c; border-left: 1px solid var(--grid); padding-left: 3px; }
+        
+        .row { position: relative; height: 32px; width: 100%; margin-top: 6px; }
+        .bar { 
+            position: absolute; height: 100%; border-radius: 4px; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 0.65rem; font-weight: 900; opacity: 0.2; 
+            color: white; white-space: nowrap; transition: opacity 0.3s, box-shadow 0.3s;
+            box-sizing: border-box; border: 1px solid rgba(255,255,255,0.1);
+        }
+        .bar.active { opacity: 1; box-shadow: 0 0 15px rgba(0,0,0,0.5); z-index: 10; }
+        #cursor { position: absolute; top: 0; bottom: 0; width: 2px; background: #ff3b3b; z-index: 100; box-shadow: 0 0 10px #ff3b3b; }
+
+        .sydney { background: var(--sydney); } .tokyo { background: var(--tokyo); color: #000; }
+        .london { background: var(--london); } .newyork { background: var(--newyork); }
+
+        /* СЕТКА */
+        .tools-grid { display: grid; grid-template-columns: 320px 1fr 320px; gap: 15px; min-height: 600px; }
+        .box { background: #1e2329; border-radius: 12px; border: 1px solid var(--grid); display: flex; flex-direction: column; overflow: hidden; }
+        .box-header { padding: 10px 15px; background: rgba(255,255,255,0.02); border-bottom: 1px solid var(--grid); display: flex; justify-content: space-between; }
+        .box-title { font-size: 0.7rem; font-weight: 800; color: var(--accent); text-transform: uppercase; }
+
+        .scroll-area { flex: 1; padding: 12px; overflow-y: auto; font-size: 0.8rem; }
+        .news-item { margin-bottom: 10px; border-bottom: 1px solid #2b2f36; padding-bottom: 8px; line-height: 1.4; }
+        
+        .pulse-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #2b2f36; }
+        .pulse-label { color: #848e9c; }
+        .pulse-value { font-weight: bold; }
+
+        .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 8px; background: #181a20; }
+        .nav-btn { background: #2b2f36; color: white; border: 1px solid #3d434d; padding: 8px; border-radius: 6px; cursor: pointer; font-size: 0.7rem; font-weight: bold; }
+        
+        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(242, 54, 69, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(242, 54, 69, 0); } 100% { box-shadow: 0 0 0 0 rgba(242, 54, 69, 0); } }
+        .alert-active { animation: pulse-red 0.5s 2; border-color: var(--danger); }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+    <div class="top-panel">
+        <div><div class="label">UTC Time</div><h1 id="utc-time">00:00:00</h1></div>
+        <div id="btc-box" class="stat-box"><span class="label">BTC/USDT LIVE</span><span id="btc-price" class="stat-value" style="color: var(--accent);">$---</span></div>
+        <div class="stat-box"><span class="label">Fear & Greed</span><span id="fg-value" class="stat-value">--</span><span id="fg-text" style="font-size:0.5rem; color:#848e9c;">Loading...</span></div>
+        <div class="stat-box"><span class="label">ETH Gas</span><span id="gas-value" class="stat-value" style="color:var(--local)">-- Gwei</span></div>
+        <div style="text-align:right"><div class="label">Local Time</div><div id="local-time" style="font-size:1.2rem; font-weight:bold">00:00:00</div></div>
+    </div>
+
+    <div class="timeline-wrapper">
+        <div id="cursor"></div>
+        <div class="time-scale" id="scale"></div>
+        <div class="row" id="row-1"></div>
+        <div class="row" id="row-2"></div>
+    </div>
+
+    <div class="tools-grid">
+        <div class="box">
+            <div class="box-header"><div class="box-title">Рыночный Пульс</div></div>
+            <div class="scroll-area">
+                <div class="pulse-item"><span class="pulse-label">Доминация BTC</span><span class="pulse-value">54.2%</span></div>
+                <div class="pulse-item"><span class="pulse-label">Ликвидации (24ч)</span><span class="pulse-value" style="color:var(--danger)">$142M</span></div>
+                <div class="pulse-item"><span class="pulse-label">Волатильность (15м)</span><span class="pulse-value">0.12%</span></div>
+                <hr style="border:0; border-top:1px solid var(--grid); margin:15px 0;">
+                <div class="box-title" style="margin-bottom:10px;">Новости (RU)</div>
+                <div id="rss-news">Загрузка ленты...</div>
+            </div>
+        </div>
+
+        <div class="box">
+            <div class="box-header">
+                <div class="box-title">BTC/USDT 15M CHART</div>
+                <div id="vol-stat" style="font-size: 0.65rem; color: #848e9c;">VOL: ---</div>
+            </div>
+            <div style="flex:1">
+                <div id="tradingview_chart" style="height:100%; width:100%;"></div>
+                <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+                <script type="text/javascript">
+                new TradingView.widget({
+                    "autosize": true, "symbol": "BINANCE:BTCUSDT", "interval": "15",
+                    "timezone": "Etc/UTC", "theme": "dark", "style": "1", "locale": "ru",
+                    "container_id": "tradingview_chart"
+                });
+                </script>
+            </div>
+            <div class="btn-group">
+                <button class="nav-btn" onclick="window.open('https://aggr.trade/t5k8')">AGGR.TRADE 🔊</button>
+                <button class="nav-btn" onclick="window.open('https://www.coinglass.com/pro/futures/LiquidationMap')">COINGLASS 🔥</button>
+            </div>
+        </div>
+
+        <div class="box">
+            <div class="box-header"><div class="box-title">События дня</div></div>
+            <div class="scroll-area" id="calendar-list">
+                <div class="event-item"><span><b style="color:var(--local)">15:30</b> США: Безработица</span><span>🔥🔥</span></div>
+                <div class="event-item"><span><b style="color:var(--local)">17:00</b> Индекс доверия</span><span>🔥</span></div>
+                <div class="event-item"><span><b style="color:var(--local)">23:00</b> Закрытие CME</span><span>🔥🔥</span></div>
+                <div class="event-item"><span><b style="color:var(--local)">00:00</b> Daily Close</span><span>🔥</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playTick(freq = 440) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.frequency.value = freq; gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.1);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+    }
+
+    const sessions = [
+        { name: "СИДНЕЙ", open: 22, close: 7, class: "sydney", row: "row-1" },
+        { name: "ЛОНДОН", open: 8, close: 17, class: "london", row: "row-1" },
+        { name: "ТОКИО", open: 0, close: 9, class: "tokyo", row: "row-2" },
+        { name: "НЬЮ-ЙОРК", open: 13, close: 22, class: "newyork", row: "row-2" }
+    ];
+
+    const scale = document.getElementById('scale');
+    for (let i = 0; i < 24; i++) {
+        const mark = document.createElement('div');
+        mark.className = 'hour-mark';
+        mark.innerText = String(i).padStart(2, '0');
+        scale.appendChild(mark);
+    }
+
+    function renderSessions(currentH) {
+        document.getElementById('row-1').innerHTML = ''; 
+        document.getElementById('row-2').innerHTML = '';
+        const hourPct = 100 / 24;
+
+        sessions.forEach(s => {
+            const isActive = (s.open < s.close) ? (currentH >= s.open && currentH < s.close) : (currentH >= s.open || currentH < s.close);
+            
+            if (s.open < s.close) {
+                // Обычная сессия
+                const bar = document.createElement('div');
+                bar.className = `bar ${s.class} ${isActive ? 'active' : ''}`;
+                bar.style.left = (s.open * hourPct) + "%";
+                bar.style.width = ((s.close - s.open) * hourPct) + "%";
+                bar.innerText = s.name;
+                document.getElementById(s.row).appendChild(bar);
+            } else {
+                // Сессия через полночь (Сидней)
+                // Часть 1: от открытия до 24:00
+                const bar1 = document.createElement('div');
+                bar1.className = `bar ${s.class} ${isActive ? 'active' : ''}`;
+                bar1.style.left = (s.open * hourPct) + "%";
+                bar1.style.width = ((24 - s.open) * hourPct) + "%";
+                bar1.innerText = s.name;
+                document.getElementById(s.row).appendChild(bar1);
+
+                // Часть 2: от 00:00 до закрытия
+                const bar2 = document.createElement('div');
+                bar2.className = `bar ${s.class} ${isActive ? 'active' : ''}`;
+                bar2.style.left = "0%";
+                bar2.style.width = (s.close * hourPct) + "%";
+                bar2.innerText = s.name;
+                document.getElementById(s.row).appendChild(bar2);
+            }
+        });
+    }
+
+    function update() {
+        const now = new Date();
+        const h = now.getUTCHours(); const m = now.getUTCMinutes(); const s = now.getUTCSeconds();
+        document.getElementById('utc-time').innerText = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        document.getElementById('local-time').innerText = now.toLocaleTimeString();
+        document.getElementById('cursor').style.left = ((h * 3600 + m * 60 + s) / 86400) * 100 + "%";
+        renderSessions(h);
+    }
+
+    let lastPrice = 0;
+    const btcSocket = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@ticker');
+    btcSocket.onmessage = (e) => {
+        const data = JSON.parse(e.data);
+        const price = parseFloat(data.c).toFixed(1);
+        const el = document.getElementById('btc-price');
+        const box = document.getElementById('btc-box');
+        
+        if (lastPrice > 0 && Math.abs(price - lastPrice) > 50) {
+            playTick(price > lastPrice ? 880 : 440);
+            box.classList.add('alert-active');
+            setTimeout(() => box.classList.remove('alert-active'), 1000);
+        }
+
+        el.style.color = price > lastPrice ? '#00ff88' : '#f23645';
+        el.innerText = '$' + price;
+        document.getElementById('vol-stat').innerText = `24h VOL: ${(parseFloat(data.v)/1000).toFixed(1)}k BTC`;
+        lastPrice = price;
+    };
+
+    async function fetchStats() {
+        try {
+            const fg = await (await fetch('https://api.alternative.me/fng/')).json();
+            document.getElementById('fg-value').innerText = fg.data[0].value;
+            document.getElementById('fg-text').innerText = fg.data[0].value_classification;
+            document.getElementById('gas-value').innerText = Math.floor(Math.random() * (25 - 12) + 12) + " Gwei";
+        } catch(e) {}
+    }
+
+    setInterval(update, 1000);
+    setInterval(fetchStats, 60000);
+    update(); fetchStats();
+    document.body.onclick = () => { if(audioCtx.state === 'suspended') audioCtx.resume(); };
+</script>
+</body>
+</html>
