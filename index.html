@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Crypto Station v8.4 - Final Session Fix</title>
+    <title>The Breathing Station v8.6 - News Restored</title>
     <style>
         :root {
             --bg: #0b0e11; --container-bg: #181a20; --grid: #2b2f36;
@@ -32,7 +32,6 @@
         .stat-value { font-size: 1.1rem; font-weight: bold; display: block; }
         .label { font-size: 0.6rem; color: #848e9c; text-transform: uppercase; margin-bottom: 2px; }
 
-        /* ТАЙМЛАЙН - ГЕОМЕТРИЧЕСКИЙ ФИКС */
         .timeline-wrapper { 
             position: relative; padding-top: 30px; height: 110px; 
             margin-bottom: 25px; background: rgba(0,0,0,0.3); 
@@ -56,15 +55,16 @@
         .sydney { background: var(--sydney); } .tokyo { background: var(--tokyo); color: #000; }
         .london { background: var(--london); } .newyork { background: var(--newyork); }
 
-        /* СЕТКА */
         .tools-grid { display: grid; grid-template-columns: 320px 1fr 320px; gap: 15px; min-height: 600px; }
         .box { background: #1e2329; border-radius: 12px; border: 1px solid var(--grid); display: flex; flex-direction: column; overflow: hidden; }
         .box-header { padding: 10px 15px; background: rgba(255,255,255,0.02); border-bottom: 1px solid var(--grid); display: flex; justify-content: space-between; }
         .box-title { font-size: 0.7rem; font-weight: 800; color: var(--accent); text-transform: uppercase; }
 
         .scroll-area { flex: 1; padding: 12px; overflow-y: auto; font-size: 0.8rem; }
-        .news-item { margin-bottom: 10px; border-bottom: 1px solid #2b2f36; padding-bottom: 8px; line-height: 1.4; }
-        
+        .news-item { margin-bottom: 12px; border-bottom: 1px solid #2b2f36; padding-bottom: 8px; line-height: 1.3; color: #ced4da; cursor: pointer; }
+        .news-item:hover { color: var(--accent); }
+        .news-date { font-size: 0.65rem; color: #848e9c; display: block; margin-bottom: 3px; }
+
         .pulse-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #2b2f36; }
         .pulse-label { color: #848e9c; }
         .pulse-value { font-weight: bold; }
@@ -153,8 +153,8 @@
     }
 
     const sessions = [
-        { name: "СИДНЕЙ", open: 22, close: 7, class: "sydney", row: "row-1" },
-        { name: "ЛОНДОН", open: 8, close: 17, class: "london", row: "row-1" },
+        { name: "СИДНЕЙ", open: 21, close: 6, class: "sydney", row: "row-1" },
+        { name: "ЛОНДОН", open: 7, close: 16, class: "london", row: "row-1" },
         { name: "ТОКИО", open: 0, close: 9, class: "tokyo", row: "row-2" },
         { name: "НЬЮ-ЙОРК", open: 13, close: 22, class: "newyork", row: "row-2" }
     ];
@@ -176,7 +176,6 @@
             const isActive = (s.open < s.close) ? (currentH >= s.open && currentH < s.close) : (currentH >= s.open || currentH < s.close);
             
             if (s.open < s.close) {
-                // Обычная сессия
                 const bar = document.createElement('div');
                 bar.className = `bar ${s.class} ${isActive ? 'active' : ''}`;
                 bar.style.left = (s.open * hourPct) + "%";
@@ -184,8 +183,6 @@
                 bar.innerText = s.name;
                 document.getElementById(s.row).appendChild(bar);
             } else {
-                // Сессия через полночь (Сидней)
-                // Часть 1: от открытия до 24:00
                 const bar1 = document.createElement('div');
                 bar1.className = `bar ${s.class} ${isActive ? 'active' : ''}`;
                 bar1.style.left = (s.open * hourPct) + "%";
@@ -193,7 +190,6 @@
                 bar1.innerText = s.name;
                 document.getElementById(s.row).appendChild(bar1);
 
-                // Часть 2: от 00:00 до закрытия
                 const bar2 = document.createElement('div');
                 bar2.className = `bar ${s.class} ${isActive ? 'active' : ''}`;
                 bar2.style.left = "0%";
@@ -211,6 +207,28 @@
         document.getElementById('local-time').innerText = now.toLocaleTimeString();
         document.getElementById('cursor').style.left = ((h * 3600 + m * 60 + s) / 86400) * 100 + "%";
         renderSessions(h);
+    }
+
+    // ЛОГИКА НОВОСТЕЙ
+    async function fetchNews() {
+        const newsEl = document.getElementById('rss-news');
+        try {
+            // Используем rss2json для обхода CORS
+            const rssUrl = encodeURIComponent('https://forklog.com/feed');
+            const response = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}`);
+            const data = await response.json();
+            
+            if (data.status === 'ok') {
+                newsEl.innerHTML = data.items.slice(0, 8).map(item => `
+                    <div class="news-item" onclick="window.open('${item.link}')">
+                        <span class="news-date">${item.pubDate.split(' ')[1]}</span>
+                        ${item.title}
+                    </div>
+                `).join('');
+            }
+        } catch (e) {
+            newsEl.innerText = "Ошибка загрузки новостей";
+        }
     }
 
     let lastPrice = 0;
@@ -244,7 +262,9 @@
 
     setInterval(update, 1000);
     setInterval(fetchStats, 60000);
-    update(); fetchStats();
+    setInterval(fetchNews, 900000); // Обновление новостей раз в 15 минут
+    
+    update(); fetchStats(); fetchNews();
     document.body.onclick = () => { if(audioCtx.state === 'suspended') audioCtx.resume(); };
 </script>
 </body>
