@@ -4,29 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Breathing Station v9.0</title>
-    
-    <!-- Подключаем стили -->
     <link rel="stylesheet" href="style.css">
-    
-    <!-- Библиотеки -->
     <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
-    <script src="https://s3.tradingview.com/tv.js"></script>
 </head>
 <body>
 
-    <button id="view-toggle" onclick="toggleView()">📱 Режим Мобайл</button>
-    <div id="mobile-chart-container"></div>
+<button id="view-toggle" onclick="toggleView()">📱 Режим Мобайл</button>
+<div id="mobile-chart-container"></div>
 
-    <div class="main-container">
-        <!-- Твоя основная разметка ПК версии здесь -->
-        <div class="top-panel">
-            <h1 id="utc-time">00:00:00</h1>
-            <div id="btc-price">$---</div>
-        </div>
-        <!-- ... и так далее ... -->
+<div class="main-container">
+    <div class="top-panel">
+        <div><div class="label">UTC Time</div><h1 id="utc-time">00:00:00</h1></div>
+        <div id="btc-box" class="stat-box"><span class="label">BTC/USDT</span><span id="btc-price" class="stat-value">$---</span></div>
     </div>
+    <!-- Остальная разметка твоего интерфейса -->
+</div>
 
-    <!-- Подключаем логику в самом конце -->
-    <script src="script.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
