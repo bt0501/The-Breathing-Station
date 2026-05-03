@@ -25,14 +25,13 @@ body.mobile-mode .main-container { display: none !important; }
 
 body.mobile-mode #mobile-chart-container { display: block; }
 
-/* Кнопка переключения */
 #view-toggle {
     position: fixed; top: 10px; right: 10px; z-index: 10001;
     padding: 8px 12px; background: #f3ba2f; border: none;
-    border-radius: 8px; font-weight: bold; cursor: pointer;
+    border-radius: 8px; font-weight: bold; cursor: pointer; color: #000;
 }
 
-/* Остальные стили ПК версии (сокращенно для краткости) */
+/* Стили основной контейнера */
 .main-container { width: 98%; max-width: 1700px; background: var(--container-bg); padding: 20px; border-radius: 16px; }
 .top-panel { display: grid; grid-template-columns: 1fr auto auto auto auto 1fr; gap: 15px; align-items: center; margin-bottom: 20px; }
 #utc-time { font-size: 2.8rem; font-weight: 800; color: var(--accent); margin: 0; }
