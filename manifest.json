@@ -1,0 +1,15 @@
+{
+  "short_name": "BreathingStation",
+  "name": "The Breathing Station",
+  "icons": [
+    {
+      "src": "https://github.com/bt0501/The-Breathing-Station/blob/main/ico.png?raw=true",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "start_url": "./index.html",
+  "display": "standalone",
+  "theme_color": "#0b0e11",
+  "background_color": "#0b0e11"
+}
