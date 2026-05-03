@@ -3,11 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Breathing Station v8.6 - News Restored</title>
+    <title>The Breathing Station v8.7 - Mobile Mode Added</title>
     
-    <!-- ДОБАВЛЕННАЯ ИКОНКА -->
     <link rel="icon" type="image/png" href="https://github.com/bt0501/The-Breathing-Station/blob/main/ico.png?raw=true">
-    <!-- Настройки для установки на смартфон (PWA) -->
     <link rel="manifest" href="manifest.json">
     <script>
       if ('serviceWorker' in navigator) {
@@ -27,7 +25,33 @@
             background-color: var(--bg); color: var(--text);
             font-family: 'Inter', sans-serif; margin: 0; padding: 10px;
             display: flex; flex-direction: column; align-items: center;
+            transition: background 0.3s;
         }
+
+        /* --- НОВЫЕ СТИЛИ ДЛЯ КНОПКИ И МОБАЙЛА --- */
+        #view-toggle {
+            position: fixed; top: 10px; right: 10px; z-index: 10000;
+            padding: 8px 12px; background: #f3ba2f; border: none;
+            border-radius: 8px; font-weight: bold; cursor: pointer; color: #000;
+        }
+
+        #mobile-chart-container {
+            display: none; width: 100%; height: 400px;
+            margin-top: 20px; background: #161a1e; border-radius: 12px;
+        }
+
+        /* Когда включен мобильный режим */
+        body.mobile-mode {
+            background-color: #000000 !important;
+            padding: 5px;
+        }
+        body.mobile-mode .main-container {
+            display: none; /* Скрываем тяжелую ПК версию */
+        }
+        body.mobile-mode #mobile-chart-container {
+            display: block; /* Показываем только график */
+        }
+        /* --------------------------------------- */
 
         .main-container {
             width: 98%; max-width: 1700px;
@@ -99,13 +123,12 @@
     </style>
 </head>
 <body>
-    <!-- Кнопка-переключатель в углу экрана -->
-<button id="view-toggle" onclick="toggleView()">📱 Режим Мобайл</button>
 
-<!-- Контейнер для графика (по умолчанию скрыт) -->
+<!-- Кнопка и контейнер для мобильного режима -->
+<button id="view-toggle" onclick="toggleView()">📱 Режим Мобайл</button>
 <div id="mobile-chart-container"></div>
 
-<!-- Подключаем библиотеку для графика (вставь это перед закрывающим тегом </body>) -->
+<!-- Библиотека графиков -->
 <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
 
 <div class="main-container">
@@ -178,26 +201,56 @@
 </div>
 
 <script>
-    // Улучшенная логика звука
+    // --- НОВАЯ ЛОГИКА ДЛЯ МОБАЙЛА И ГРАФИКА ---
+    let mobileChart;
+    let candleSeries;
+
+    function toggleView() {
+        document.body.classList.toggle('mobile-mode');
+        const isMobile = document.body.classList.contains('mobile-mode');
+        const btn = document.getElementById('view-toggle');
+        
+        if (isMobile) {
+            btn.innerText = '💻 Режим ПК';
+            initMobileChart();
+        } else {
+            btn.innerText = '📱 Режим Мобайл';
+        }
+    }
+
+    function initMobileChart() {
+        const container = document.getElementById('mobile-chart-container');
+        if (mobileChart) return;
+
+        mobileChart = LightweightCharts.createChart(container, {
+            width: container.clientWidth,
+            height: 400,
+            layout: { backgroundColor: '#0b0e11', textColor: '#d1d4dc' },
+            grid: { vertLines: { color: '#1f2226' }, horzLines: { color: '#1f2226' } },
+            timeScale: { timeVisible: true, secondsVisible: true }
+        });
+
+        candleSeries = mobileChart.addCandlestickSeries({
+            upColor: '#00ff88', downColor: '#f23645',
+            borderVisible: false, wickUpColor: '#00ff88', wickDownColor: '#f23645'
+        });
+
+        // Подгоняем размер при изменении окна
+        window.addEventListener('resize', () => {
+            mobileChart.applyOptions({ width: container.clientWidth });
+        });
+    }
+
+    // Логика звука и другие функции...
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     function playTick(freq = 440) {
-        if (audioCtx.state === 'suspended') return; // Не пищим, если контекст не активирован
-
+        if (audioCtx.state === 'suspended') return;
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
-        osc.connect(gain); 
-        gain.connect(audioCtx.destination);
-        
-        osc.frequency.value = freq; 
-        gain.gain.setValueAtTime(0.03, audioCtx.currentTime); // Чуть тише
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.frequency.value = freq; gain.gain.setValueAtTime(0.03, audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.1);
-        
         osc.start();
-        // Безопасная остановка
-        osc.onended = () => {
-            osc.disconnect();
-            gain.disconnect();
-        };
         osc.stop(audioCtx.currentTime + 0.1);
     }
 
@@ -208,7 +261,6 @@
         { name: "НЬЮ-ЙОРК", open: 13, close: 22, class: "newyork", row: "row-2" }
     ];
 
-    // Генерируем шкалу один раз
     const scale = document.getElementById('scale');
     for (let i = 0; i < 24; i++) {
         const mark = document.createElement('div');
@@ -217,75 +269,52 @@
         scale.appendChild(mark);
     }
 
-    // Рендер сессий (теперь оптимизирован)
     function renderSessions() {
         const now = new Date();
         const currentH = now.getUTCHours();
-        
         document.getElementById('row-1').innerHTML = ''; 
         document.getElementById('row-2').innerHTML = '';
         const hourPct = 100 / 24;
-
         sessions.forEach(s => {
             const isActive = (s.open < s.close) ? (currentH >= s.open && currentH < s.close) : (currentH >= s.open || currentH < s.close);
-            
             const createBar = (left, width) => {
                 const bar = document.createElement('div');
                 bar.className = `bar ${s.class} ${isActive ? 'active' : ''}`;
-                bar.style.left = left + "%";
-                bar.style.width = width + "%";
-                bar.innerText = s.name;
-                return bar;
+                bar.style.left = left + "%"; bar.style.width = width + "%";
+                bar.innerText = s.name; return bar;
             };
-
             if (s.open < s.close) {
                 document.getElementById(s.row).appendChild(createBar(s.open * hourPct, (s.close - s.open) * hourPct));
             } else {
-                // Сессии, переходящие через полночь
                 document.getElementById(s.row).appendChild(createBar(s.open * hourPct, (24 - s.open) * hourPct));
                 document.getElementById(s.row).appendChild(createBar(0, s.close * hourPct));
             }
         });
-        console.log('Sessions re-rendered (optimised)');
     }
 
-    // Каждую секунду обновляем только время и курсор
     function updateClockAndCursor() {
         const now = new Date();
         const h = now.getUTCHours(); const m = now.getUTCMinutes(); const s = now.getUTCSeconds();
-        
         document.getElementById('utc-time').innerText = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
         document.getElementById('local-time').innerText = now.toLocaleTimeString();
-        
-        // Плавное движение курсора
         const totalSeconds = (h * 3600) + (m * 60) + s;
         document.getElementById('cursor').style.left = (totalSeconds / 86400) * 100 + "%";
     }
 
-    // ЛОГИКА НОВОСТЕЙ
     async function fetchNews() {
         const newsEl = document.getElementById('rss-news');
         try {
             const rssUrl = encodeURIComponent('https://forklog.com/feed');
             const response = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}`);
             const data = await response.json();
-            
             if (data.status === 'ok') {
                 newsEl.innerHTML = data.items.slice(0, 8).map(item => {
-                    // Извлекаем время из даты
                     const dateObj = new Date(item.pubDate);
                     const timeStr = dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                    return `
-                        <div class="news-item" onclick="window.open('${item.link}')">
-                            <span class="news-date">${timeStr}</span>
-                            ${item.title}
-                        </div>
-                    `;
+                    return `<div class="news-item" onclick="window.open('${item.link}')"><span class="news-date">${timeStr}</span>${item.title}</div>`;
                 }).join('');
             }
-        } catch (e) {
-            newsEl.innerText = "Ошибка загрузки новостей";
-        }
+        } catch (e) { newsEl.innerText = "Ошибка загрузки новостей"; }
     }
 
     // WebSocket Binance
@@ -294,13 +323,13 @@
     
     btcSocket.onmessage = (e) => {
         const data = JSON.parse(e.data);
-        const price = parseFloat(data.c).toFixed(1);
+        const price = parseFloat(data.c);
+        const priceStr = price.toFixed(1);
         const el = document.getElementById('btc-price');
         const box = document.getElementById('btc-box');
         
         if (lastPrice > 0) {
             const diff = Math.abs(price - lastPrice);
-            // Алерты на резкое движение (> 0.1% от цены)
             if (diff > (lastPrice * 0.001)) {
                 playTick(price > lastPrice ? 880 : 440);
                 box.classList.add('alert-active');
@@ -309,58 +338,49 @@
             el.style.color = price > lastPrice ? '#00ff88' : '#f23645';
         }
 
-        el.innerText = '$' + price;
-        
-        // Округляем объем до миллионов для читаемости
+        el.innerText = '$' + priceStr;
+
+        // ОБНОВЛЕНИЕ ГРАФИКА ДЛЯ МОБАЙЛА
+        if (candleSeries) {
+            candleSeries.update({
+                time: Math.floor(Date.now() / 1000),
+                open: lastPrice || price,
+                high: price > lastPrice ? price : lastPrice,
+                low: price < lastPrice ? price : lastPrice,
+                close: price
+            });
+        }
+
         const vol = (parseFloat(data.q) / 1000000).toFixed(2);
         document.getElementById('vol-stat').innerText = `24h VOL: ${vol}M USDT`;
         lastPrice = price;
     };
 
-    btcSocket.onerror = (err) => {
-        console.error("WebSocket error:", err);
-        document.getElementById('btc-price').innerText = "Conn Error";
-    };
-
-    // API Stats
     async function fetchStats() {
         try {
             const fg = await (await fetch('https://api.alternative.me/fng/')).json();
             if(fg.data && fg.data[0]) {
                 document.getElementById('fg-value').innerText = fg.data[0].value;
                 document.getElementById('fg-text').innerText = fg.data[0].value_classification;
-                // Цвет в зависимости от индекса
                 const val = fg.data[0].value;
                 const fgEl = document.getElementById('fg-value');
                 if(val >= 75) fgEl.style.color = 'var(--accent)';
                 else if(val <= 25) fgEl.style.color = 'var(--danger)';
                 else fgEl.style.color = 'var(--text)';
             }
-            
-            // Хардкод газа (т.к. бесплатного API нет без ключа)
             document.getElementById('gas-value').innerText = Math.floor(Math.random() * (20 - 10) + 10) + " Gwei";
-        } catch(e) {
-            console.error("Stats fetch error:", e);
-        }
+        } catch(e) { console.error("Stats error:", e); }
     }
 
-    // Интервалы
-    setInterval(updateClockAndCursor, 1000); // Часы и курсор - каждую секунду
-    setInterval(renderSessions, 60000);      // Сетка сессий - раз в минуту
-    setInterval(fetchStats, 300000);          // Статы - раз в 5 минут
-    setInterval(fetchNews, 900000);           // Новости - раз в 15 минут
+    setInterval(updateClockAndCursor, 1000);
+    setInterval(renderSessions, 60000);
+    setInterval(fetchStats, 300000);
+    setInterval(fetchNews, 900000);
     
-    // Стартовый запуск
-    updateClockAndCursor();
-    renderSessions();
-    fetchStats();
-    fetchNews();
+    updateClockAndCursor(); renderSessions(); fetchStats(); fetchNews();
 
-    // Разблокировка звука
     document.body.onclick = () => { 
-        if(audioCtx.state === 'suspended') {
-            audioCtx.resume().then(() => console.log('AudioContext activated'));
-        } 
+        if(audioCtx.state === 'suspended') audioCtx.resume();
     };
 </script>
 
