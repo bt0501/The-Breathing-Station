@@ -22,10 +22,19 @@ const sessions = [
 
 function initTradingView() {
     new TradingView.widget({
-        "autosize": true, "symbol": "BINANCE:BTCUSDT", "interval": "15",
-        "timezone": "Etc/UTC", "theme": "dark", "style": "1", "locale": "ru",
-        "container_id": "tradingview_chart", "hide_side_toolbar": false,
-        "allow_symbol_change": true, "details": true, "hotlist": true, "calendar": true,
+        "autosize": true, // Это критически важно для мобилок
+        "symbol": "BINANCE:BTCUSDT",
+        "interval": "15",
+        "timezone": "Etc/UTC",
+        "theme": "dark",
+        "style": "1",
+        "locale": "ru",
+        "container_id": "tradingview_chart",
+        "hide_side_toolbar": false,
+        "allow_symbol_change": true,
+        "details": true,
+        "hotlist": true,
+        "calendar": true,
     });
 }
 
