@@ -1,0 +1,46 @@
+:root {
+    --bg: #0b0e11; --container-bg: #181a20; --grid: #2b2f36;
+    --text: #eaecef; --accent: #00ff88; --danger: #f23645;
+    --local: #4aafff; --sydney: #9c27b0; --tokyo: #f0b90b; --london: #3267ff; --newyork: #f23645;
+}
+
+body {
+    background-color: var(--bg); color: var(--text);
+    font-family: 'Inter', sans-serif; margin: 0; padding: 10px;
+    display: flex; flex-direction: column; align-items: center;
+}
+
+/* Мобильный режим */
+body.mobile-mode {
+    background-color: #000 !important;
+    padding: 0; overflow: hidden;
+}
+
+body.mobile-mode .main-container { display: none !important; }
+
+#mobile-chart-container {
+    display: none; width: 100vw; height: 100vh;
+    background: #0b0e11;
+}
+
+body.mobile-mode #mobile-chart-container { display: block; }
+
+/* Кнопка переключения */
+#view-toggle {
+    position: fixed; top: 10px; right: 10px; z-index: 10001;
+    padding: 8px 12px; background: #f3ba2f; border: none;
+    border-radius: 8px; font-weight: bold; cursor: pointer;
+}
+
+/* Остальные стили ПК версии (сокращенно для краткости) */
+.main-container { width: 98%; max-width: 1700px; background: var(--container-bg); padding: 20px; border-radius: 16px; }
+.top-panel { display: grid; grid-template-columns: 1fr auto auto auto auto 1fr; gap: 15px; align-items: center; margin-bottom: 20px; }
+#utc-time { font-size: 2.8rem; font-weight: 800; color: var(--accent); margin: 0; }
+.stat-box { background: #1e2329; padding: 8px 15px; border-radius: 10px; text-align: center; border: 1px solid var(--grid); }
+.timeline-wrapper { position: relative; height: 110px; margin-bottom: 25px; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid var(--grid); overflow: hidden; }
+.row { position: relative; height: 32px; width: 100%; margin-top: 6px; }
+.bar { position: absolute; height: 100%; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 900; opacity: 0.2; color: white; }
+.bar.active { opacity: 1; box-shadow: 0 0 15px rgba(0,0,0,0.5); z-index: 10; }
+#cursor { position: absolute; top: 0; bottom: 0; width: 2px; background: #ff3b3b; z-index: 100; }
+.tools-grid { display: grid; grid-template-columns: 320px 1fr 320px; gap: 15px; min-height: 600px; }
+.box { background: #1e2329; border-radius: 12px; border: 1px solid var(--grid); display: flex; flex-direction: column; overflow: hidden; }
