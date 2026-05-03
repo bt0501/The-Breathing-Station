@@ -15,6 +15,39 @@
     </script>
     
     <style>
+        /* Улучшенный мобильный режим */
+body.mobile-mode {
+    background-color: #0b0e11 !important;
+    padding: 0;
+    margin: 0;
+    overflow: hidden; /* Убираем прокрутку в мобайле */
+}
+
+body.mobile-mode .main-container {
+    display: none !important;
+}
+
+#mobile-chart-container {
+    display: none;
+    width: 100vw;
+    height: 100vh; /* График на весь экран */
+    background: #0b0e11;
+}
+
+body.mobile-mode #mobile-chart-container {
+    display: block;
+}
+
+/* Кнопка переключения, чтобы не мешала графику */
+#view-toggle {
+    position: fixed;
+    top: 5px;
+    right: 5px;
+    z-index: 10001;
+    opacity: 0.6; /* Делаем чуть прозрачной */
+    padding: 5px 10px;
+    font-size: 12px;
+}
         :root {
             --bg: #0b0e11; --container-bg: #181a20; --grid: #2b2f36;
             --text: #eaecef; --accent: #00ff88; --danger: #f23645;
@@ -203,43 +236,64 @@
 <script>
     // --- НОВАЯ ЛОГИКА ДЛЯ МОБАЙЛА И ГРАФИКА ---
     let mobileChart;
-    let candleSeries;
+let candleSeries;
 
-    function toggleView() {
-        document.body.classList.toggle('mobile-mode');
-        const isMobile = document.body.classList.contains('mobile-mode');
-        const btn = document.getElementById('view-toggle');
-        
-        if (isMobile) {
-            btn.innerText = '💻 Режим ПК';
-            initMobileChart();
-        } else {
-            btn.innerText = '📱 Режим Мобайл';
-        }
+// Функция переключения
+function toggleView() {
+    const isMobile = document.body.classList.toggle('mobile-mode');
+    localStorage.setItem('viewMode', isMobile ? 'mobile' : 'desktop'); // Сохраняем выбор
+    updateToggleButton(isMobile);
+    
+    if (isMobile) {
+        initMobileChart();
+    }
+}
+
+// Обновление текста на кнопке
+function updateToggleButton(isMobile) {
+    const btn = document.getElementById('view-toggle');
+    btn.innerText = isMobile ? '💻 Режим ПК' : '📱 Режим Мобайл';
+}
+
+// Инициализация графика
+function initMobileChart() {
+    const container = document.getElementById('mobile-chart-container');
+    if (mobileChart) {
+        // Если график уже есть, просто подгоняем размер
+        mobileChart.applyOptions({ width: window.innerWidth, height: window.innerHeight });
+        return;
     }
 
-    function initMobileChart() {
-        const container = document.getElementById('mobile-chart-container');
-        if (mobileChart) return;
+    mobileChart = LightweightCharts.createChart(container, {
+        width: window.innerWidth,
+        height: window.innerHeight,
+        layout: { backgroundColor: '#0b0e11', textColor: '#d1d4dc' },
+        grid: { vertLines: { color: '#1f2226' }, horzLines: { color: '#1f2226' } },
+        timeScale: { timeVisible: true, secondsVisible: true }
+    });
 
-        mobileChart = LightweightCharts.createChart(container, {
-            width: container.clientWidth,
-            height: 400,
-            layout: { backgroundColor: '#0b0e11', textColor: '#d1d4dc' },
-            grid: { vertLines: { color: '#1f2226' }, horzLines: { color: '#1f2226' } },
-            timeScale: { timeVisible: true, secondsVisible: true }
-        });
+    candleSeries = mobileChart.addCandlestickSeries({
+        upColor: '#00ff88', downColor: '#f23645',
+        borderVisible: false, wickUpColor: '#00ff88', wickDownColor: '#f23645'
+    });
+}
 
-        candleSeries = mobileChart.addCandlestickSeries({
-            upColor: '#00ff88', downColor: '#f23645',
-            borderVisible: false, wickUpColor: '#00ff88', wickDownColor: '#f23645'
-        });
-
-        // Подгоняем размер при изменении окна
-        window.addEventListener('resize', () => {
-            mobileChart.applyOptions({ width: container.clientWidth });
-        });
+// ПРОВЕРКА ПРИ ЗАГРУЗКЕ СТРАНИЦЫ
+window.addEventListener('DOMContentLoaded', () => {
+    const savedMode = localStorage.getItem('viewMode');
+    if (savedMode === 'mobile') {
+        document.body.classList.add('mobile-mode');
+        updateToggleButton(true);
+        initMobileChart();
     }
+});
+
+// Следим за изменением размера экрана
+window.addEventListener('resize', () => {
+    if (document.body.classList.contains('mobile-mode') && mobileChart) {
+        mobileChart.applyOptions({ width: window.innerWidth, height: window.innerHeight });
+    }
+});
 
     // Логика звука и другие функции...
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
