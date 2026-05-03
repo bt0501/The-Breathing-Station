@@ -4,22 +4,70 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Breathing Station v9.0</title>
+    
+    <!-- 1. ПОДКЛЮЧАЕМ СТИЛИ -->
     <link rel="stylesheet" href="style.css">
+    
+    <!-- 2. ПОДКЛЮЧАЕМ БИБЛИОТЕКУ ГРАФИКОВ -->
     <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
 </head>
 <body>
 
-<button id="view-toggle" onclick="toggleView()">📱 Режим Мобайл</button>
-<div id="mobile-chart-container"></div>
+    <!-- Кнопка и мобильный контейнер -->
+    <button id="view-toggle" onclick="toggleView()">📱 Режим Мобайл</button>
+    <div id="mobile-chart-container"></div>
 
-<div class="main-container">
-    <div class="top-panel">
-        <div><div class="label">UTC Time</div><h1 id="utc-time">00:00:00</h1></div>
-        <div id="btc-box" class="stat-box"><span class="label">BTC/USDT</span><span id="btc-price" class="stat-value">$---</span></div>
+    <div class="main-container">
+        <!-- ВЕРХНЯЯ ПАНЕЛЬ -->
+        <div class="top-panel">
+            <div>
+                <div class="label">UTC Time</div>
+                <h1 id="utc-time">00:00:00</h1>
+            </div>
+            <div id="btc-box" class="stat-box">
+                <span class="label">BTC/USDT LIVE</span>
+                <span id="btc-price" class="stat-value" style="color: var(--accent);">$---</span>
+            </div>
+            <div style="text-align:right">
+                <div class="label">Local Time</div>
+                <div id="local-time" style="font-size:1.2rem; font-weight:bold">00:00:00</div>
+            </div>
+        </div>
+
+        <!-- ТАЙМЛАЙН СЕССИЙ -->
+        <div class="timeline-wrapper">
+            <div id="cursor"></div>
+            <div class="time-scale" id="scale"></div>
+            <div class="row" id="row-1"></div>
+            <div class="row" id="row-2"></div>
+        </div>
+
+        <!-- ГРАФИК И ИНСТРУМЕНТЫ -->
+        <div class="tools-grid">
+            <div class="box">
+                <div class="box-header"><div class="box-title">BTC/USDT 15M CHART</div></div>
+                <div style="flex:1; position: relative;">
+                    <div id="tradingview_chart" style="height:100%; width:100%;"></div>
+                    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+                    <script type="text/javascript">
+                        new TradingView.widget({
+                            "autosize": true, "symbol": "BINANCE:BTCUSDT", "interval": "15",
+                            "timezone": "Etc/UTC", "theme": "dark", "style": "1", "locale": "ru",
+                            "container_id": "tradingview_chart",
+                            "hide_side_toolbar": false, "allow_symbol_change": true, "details": true
+                        });
+                    </script>
+                </div>
+            </div>
+        </div>
     </div>
-    <!-- Остальная разметка твоего интерфейса -->
-</div>
 
-<script src="script.js"></script>
+    <!-- 3. ПОДКЛЮЧАЕМ СКРИПТ (строго в конце body) -->
+    <script src="script.js"></script>
+    
+    <!-- Твой водяной знак -->
+    <div style="position: fixed; bottom: 10px; right: 10px; font-size: 12px; color: #FFD700; opacity: 0.5; z-index: 9999;">
+        Baitan_0501 白坦
+    </div>
 </body>
 </html>
