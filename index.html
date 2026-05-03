@@ -7,6 +7,14 @@
     
     <!-- ДОБАВЛЕННАЯ ИКОНКА -->
     <link rel="icon" type="image/png" href="https://github.com/bt0501/The-Breathing-Station/blob/main/ico.png?raw=true">
+    <!-- Настройки для установки на смартфон (PWA) -->
+    <link rel="manifest" href="manifest.json">
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js')
+          .then(() => console.log("Service Worker Registered"));
+      }
+    </script>
     
     <style>
         :root {
