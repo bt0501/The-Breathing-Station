@@ -3,71 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Breathing Station v9.0</title>
+    <title>The Breathing Station v8.6 - News Restored</title>
     
-    <!-- 1. ПОДКЛЮЧАЕМ СТИЛИ -->
+    <link rel="icon" type="image/png" href="https://github.com/bt0501/The-Breathing-Station/blob/main/ico.png?raw=true">
+    <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="style.css">
-    
-    <!-- 2. ПОДКЛЮЧАЕМ БИБЛИОТЕКУ ГРАФИКОВ -->
-    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+
+    <script src="https://s3.tradingview.com/tv.js"></script>
 </head>
 <body>
 
-    <!-- Кнопка и мобильный контейнер -->
-    <button id="view-toggle" onclick="toggleView()">📱 Режим Мобайл</button>
-    <div id="mobile-chart-container"></div>
+<div class="main-container">
+    <div class="top-panel">
+        <div><div class="label">UTC Time</div><h1 id="utc-time">00:00:00</h1></div>
+        <div id="btc-box" class="stat-box"><span class="label">BTC/USDT LIVE</span><span id="btc-price" class="stat-value" style="color: var(--accent);">$---</span></div>
+        <div class="stat-box"><span class="label">Fear & Greed</span><span id="fg-value" class="stat-value">--</span><span id="fg-text" style="font-size:0.5rem; color:#848e9c;">Loading...</span></div>
+        <div class="stat-box"><span class="label">ETH Gas</span><span id="gas-value" class="stat-value" style="color:var(--local)">-- Gwei</span></div>
+        <div style="text-align:right"><div class="label">Local Time</div><div id="local-time" style="font-size:1.2rem; font-weight:bold">00:00:00</div></div>
+    </div>
 
-    <div class="main-container">
-        <!-- ВЕРХНЯЯ ПАНЕЛЬ -->
-        <div class="top-panel">
-            <div>
-                <div class="label">UTC Time</div>
-                <h1 id="utc-time">00:00:00</h1>
-            </div>
-            <div id="btc-box" class="stat-box">
-                <span class="label">BTC/USDT LIVE</span>
-                <span id="btc-price" class="stat-value" style="color: var(--accent);">$---</span>
-            </div>
-            <div style="text-align:right">
-                <div class="label">Local Time</div>
-                <div id="local-time" style="font-size:1.2rem; font-weight:bold">00:00:00</div>
+    <div class="timeline-wrapper">
+        <div id="cursor"></div>
+        <div class="time-scale" id="scale"></div>
+        <div class="row" id="row-1"></div>
+        <div class="row" id="row-2"></div>
+    </div>
+
+    <div class="tools-grid">
+        <div class="box">
+            <div class="box-header"><div class="box-title">Рыночный Пульс</div></div>
+            <div class="scroll-area">
+                <div class="pulse-item"><span class="pulse-label">Доминация BTC</span><span class="pulse-value">54.2%</span></div>
+                <div class="pulse-item"><span class="pulse-label">Ликвидации (24ч)</span><span class="pulse-value" style="color:var(--danger)">$142M</span></div>
+                <div class="pulse-item"><span class="pulse-label">Волатильность (15м)</span><span class="pulse-value">0.12%</span></div>
+                <hr style="border:0; border-top:1px solid var(--grid); margin:15px 0;">
+                <div class="box-title" style="margin-bottom:10px;">Новости (RU)</div>
+                <div id="rss-news">Загрузка ленты...</div>
             </div>
         </div>
 
-        <!-- ТАЙМЛАЙН СЕССИЙ -->
-        <div class="timeline-wrapper">
-            <div id="cursor"></div>
-            <div class="time-scale" id="scale"></div>
-            <div class="row" id="row-1"></div>
-            <div class="row" id="row-2"></div>
+        <div class="box">
+            <div class="box-header">
+                <div class="box-title">BTC/USDT 15M CHART</div>
+                <div id="vol-stat" style="font-size: 0.65rem; color: #848e9c;">VOL: ---</div>
+            </div>
+            <div style="flex:1; position: relative;">
+                <div id="tradingview_chart" style="height:100%; width:100%;"></div>
+            </div>
+            <div class="btn-group">
+                <button class="nav-btn" onclick="window.open('https://aggr.trade/t5k8')">AGGR.TRADE 🔊</button>
+                <button class="nav-btn" onclick="window.open('https://www.coinglass.com/pro/futures/LiquidationMap')">COINGLASS 🔥</button>
+                <button class="nav-btn" onclick="window.open('https://www.tensorcharts.com/')">TENSORCHARTS 📊</button>
+            </div>
         </div>
 
-        <!-- ГРАФИК И ИНСТРУМЕНТЫ -->
-        <div class="tools-grid">
-            <div class="box">
-                <div class="box-header"><div class="box-title">BTC/USDT 15M CHART</div></div>
-                <div style="flex:1; position: relative;">
-                    <div id="tradingview_chart" style="height:100%; width:100%;"></div>
-                    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
-                    <script type="text/javascript">
-                        new TradingView.widget({
-                            "autosize": true, "symbol": "BINANCE:BTCUSDT", "interval": "15",
-                            "timezone": "Etc/UTC", "theme": "dark", "style": "1", "locale": "ru",
-                            "container_id": "tradingview_chart",
-                            "hide_side_toolbar": false, "allow_symbol_change": true, "details": true
-                        });
-                    </script>
-                </div>
+        <div class="box">
+            <div class="box-header"><div class="box-title">События дня</div></div>
+            <div class="scroll-area" id="calendar-list">
+                <div class="event-item"><span><b style="color:var(--local)">15:30</b> США: Безработица</span><span>🔥🔥</span></div>
+                <div class="event-item"><span><b style="color:var(--local)">17:00</b> Индекс доверия</span><span>🔥</span></div>
+                <div class="event-item"><span><b style="color:var(--local)">23:00</b> Закрытие CME</span><span>🔥🔥</span></div>
+                <div class="event-item"><span><b style="color:var(--local)">00:00</b> Daily Close</span><span>🔥</span></div>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- 3. ПОДКЛЮЧАЕМ СКРИПТ (строго в конце body) -->
-    <script src="script.js"></script>
-    
-    <!-- Твой водяной знак -->
-    <div style="position: fixed; bottom: 10px; right: 10px; font-size: 12px; color: #FFD700; opacity: 0.5; z-index: 9999;">
-        Baitan_0501 白坦
-    </div>
+<div class="watermark">Baitan_0501 白坦</div>
+
+<script src="script.js"></script>
 </body>
 </html>
