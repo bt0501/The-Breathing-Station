@@ -99,6 +99,14 @@
     </style>
 </head>
 <body>
+    <!-- Кнопка-переключатель в углу экрана -->
+<button id="view-toggle" onclick="toggleView()">📱 Режим Мобайл</button>
+
+<!-- Контейнер для графика (по умолчанию скрыт) -->
+<div id="mobile-chart-container"></div>
+
+<!-- Подключаем библиотеку для графика (вставь это перед закрывающим тегом </body>) -->
+<script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
 
 <div class="main-container">
     <div class="top-panel">
