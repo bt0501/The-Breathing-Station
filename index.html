@@ -2,7 +2,12 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Breathing Station v8.6 - News Restored</title>
+    
+    <!-- ДОБАВЛЕННАЯ ИКОНКА -->
+    <link rel="icon" type="image/png" href="https://github.com/bt0501/The-Breathing-Station/blob/main/ico.png?raw=true">
+    
     <style>
         :root {
             --bg: #0b0e11; --container-bg: #181a20; --grid: #2b2f36;
@@ -69,14 +74,17 @@
         .pulse-label { color: #848e9c; }
         .pulse-value { font-weight: bold; }
 
-       .btn-group { 
-    display: grid; 
-    grid-template-columns: 1fr 1fr 1fr; /* Добавили еще одну колонку */
-    gap: 8px; 
-    padding: 8px; 
-    background: #181a20; 
-}
-        .nav-btn { background: #2b2f36; color: white; border: 1px solid #3d434d; padding: 8px; border-radius: 6px; cursor: pointer; font-size: 0.7rem; font-weight: bold; }
+        .event-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #2b2f36; }
+
+        .btn-group { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr 1fr; 
+            gap: 8px; 
+            padding: 8px; 
+            background: #181a20; 
+        }
+        .nav-btn { background: #2b2f36; color: white; border: 1px solid #3d434d; padding: 8px; border-radius: 6px; cursor: pointer; font-size: 0.7rem; font-weight: bold; width: 100%; box-sizing: border-box;}
+        .nav-btn:hover { background: #3d434d; }
         
         @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(242, 54, 69, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(242, 54, 69, 0); } 100% { box-shadow: 0 0 0 0 rgba(242, 54, 69, 0); } }
         .alert-active { animation: pulse-red 0.5s 2; border-color: var(--danger); }
@@ -118,14 +126,19 @@
                 <div class="box-title">BTC/USDT 15M CHART</div>
                 <div id="vol-stat" style="font-size: 0.65rem; color: #848e9c;">VOL: ---</div>
             </div>
-            <div style="flex:1">
+            <div style="flex:1; position: relative;">
                 <div id="tradingview_chart" style="height:100%; width:100%;"></div>
                 <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
                 <script type="text/javascript">
                 new TradingView.widget({
                     "autosize": true, "symbol": "BINANCE:BTCUSDT", "interval": "15",
                     "timezone": "Etc/UTC", "theme": "dark", "style": "1", "locale": "ru",
-                    "container_id": "tradingview_chart"
+                    "container_id": "tradingview_chart",
+                    "hide_side_toolbar": false,
+                    "allow_symbol_change": true,
+                    "details": true,
+                    "hotlist": true,
+                    "calendar": true,
                 });
                 </script>
             </div>
@@ -149,14 +162,27 @@
 </div>
 
 <script>
+    // Улучшенная логика звука
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     function playTick(freq = 440) {
+        if (audioCtx.state === 'suspended') return; // Не пищим, если контекст не активирован
+
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.frequency.value = freq; gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+        osc.connect(gain); 
+        gain.connect(audioCtx.destination);
+        
+        osc.frequency.value = freq; 
+        gain.gain.setValueAtTime(0.03, audioCtx.currentTime); // Чуть тише
         gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.1);
-        osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+        
+        osc.start();
+        // Безопасная остановка
+        osc.onended = () => {
+            osc.disconnect();
+            gain.disconnect();
+        };
+        osc.stop(audioCtx.currentTime + 0.1);
     }
 
     const sessions = [
@@ -166,6 +192,7 @@
         { name: "НЬЮ-ЙОРК", open: 13, close: 22, class: "newyork", row: "row-2" }
     ];
 
+    // Генерируем шкалу один раз
     const scale = document.getElementById('scale');
     for (let i = 0; i < 24; i++) {
         const mark = document.createElement('div');
@@ -174,7 +201,11 @@
         scale.appendChild(mark);
     }
 
-    function renderSessions(currentH) {
+    // Рендер сессий (теперь оптимизирован)
+    function renderSessions() {
+        const now = new Date();
+        const currentH = now.getUTCHours();
+        
         document.getElementById('row-1').innerHTML = ''; 
         document.getElementById('row-2').innerHTML = '';
         const hourPct = 100 / 24;
@@ -182,100 +213,144 @@
         sessions.forEach(s => {
             const isActive = (s.open < s.close) ? (currentH >= s.open && currentH < s.close) : (currentH >= s.open || currentH < s.close);
             
-            if (s.open < s.close) {
+            const createBar = (left, width) => {
                 const bar = document.createElement('div');
                 bar.className = `bar ${s.class} ${isActive ? 'active' : ''}`;
-                bar.style.left = (s.open * hourPct) + "%";
-                bar.style.width = ((s.close - s.open) * hourPct) + "%";
+                bar.style.left = left + "%";
+                bar.style.width = width + "%";
                 bar.innerText = s.name;
-                document.getElementById(s.row).appendChild(bar);
-            } else {
-                const bar1 = document.createElement('div');
-                bar1.className = `bar ${s.class} ${isActive ? 'active' : ''}`;
-                bar1.style.left = (s.open * hourPct) + "%";
-                bar1.style.width = ((24 - s.open) * hourPct) + "%";
-                bar1.innerText = s.name;
-                document.getElementById(s.row).appendChild(bar1);
+                return bar;
+            };
 
-                const bar2 = document.createElement('div');
-                bar2.className = `bar ${s.class} ${isActive ? 'active' : ''}`;
-                bar2.style.left = "0%";
-                bar2.style.width = (s.close * hourPct) + "%";
-                bar2.innerText = s.name;
-                document.getElementById(s.row).appendChild(bar2);
+            if (s.open < s.close) {
+                document.getElementById(s.row).appendChild(createBar(s.open * hourPct, (s.close - s.open) * hourPct));
+            } else {
+                // Сессии, переходящие через полночь
+                document.getElementById(s.row).appendChild(createBar(s.open * hourPct, (24 - s.open) * hourPct));
+                document.getElementById(s.row).appendChild(createBar(0, s.close * hourPct));
             }
         });
+        console.log('Sessions re-rendered (optimised)');
     }
 
-    function update() {
+    // Каждую секунду обновляем только время и курсор
+    function updateClockAndCursor() {
         const now = new Date();
         const h = now.getUTCHours(); const m = now.getUTCMinutes(); const s = now.getUTCSeconds();
+        
         document.getElementById('utc-time').innerText = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
         document.getElementById('local-time').innerText = now.toLocaleTimeString();
-        document.getElementById('cursor').style.left = ((h * 3600 + m * 60 + s) / 86400) * 100 + "%";
-        renderSessions(h);
+        
+        // Плавное движение курсора
+        const totalSeconds = (h * 3600) + (m * 60) + s;
+        document.getElementById('cursor').style.left = (totalSeconds / 86400) * 100 + "%";
     }
 
     // ЛОГИКА НОВОСТЕЙ
     async function fetchNews() {
         const newsEl = document.getElementById('rss-news');
         try {
-            // Используем rss2json для обхода CORS
             const rssUrl = encodeURIComponent('https://forklog.com/feed');
             const response = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}`);
             const data = await response.json();
             
             if (data.status === 'ok') {
-                newsEl.innerHTML = data.items.slice(0, 8).map(item => `
-                    <div class="news-item" onclick="window.open('${item.link}')">
-                        <span class="news-date">${item.pubDate.split(' ')[1]}</span>
-                        ${item.title}
-                    </div>
-                `).join('');
+                newsEl.innerHTML = data.items.slice(0, 8).map(item => {
+                    // Извлекаем время из даты
+                    const dateObj = new Date(item.pubDate);
+                    const timeStr = dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    return `
+                        <div class="news-item" onclick="window.open('${item.link}')">
+                            <span class="news-date">${timeStr}</span>
+                            ${item.title}
+                        </div>
+                    `;
+                }).join('');
             }
         } catch (e) {
             newsEl.innerText = "Ошибка загрузки новостей";
         }
     }
 
+    // WebSocket Binance
     let lastPrice = 0;
     const btcSocket = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@ticker');
+    
     btcSocket.onmessage = (e) => {
         const data = JSON.parse(e.data);
         const price = parseFloat(data.c).toFixed(1);
         const el = document.getElementById('btc-price');
         const box = document.getElementById('btc-box');
         
-        if (lastPrice > 0 && Math.abs(price - lastPrice) > 50) {
-            playTick(price > lastPrice ? 880 : 440);
-            box.classList.add('alert-active');
-            setTimeout(() => box.classList.remove('alert-active'), 1000);
+        if (lastPrice > 0) {
+            const diff = Math.abs(price - lastPrice);
+            // Алерты на резкое движение (> 0.1% от цены)
+            if (diff > (lastPrice * 0.001)) {
+                playTick(price > lastPrice ? 880 : 440);
+                box.classList.add('alert-active');
+                setTimeout(() => box.classList.remove('alert-active'), 1000);
+            }
+            el.style.color = price > lastPrice ? '#00ff88' : '#f23645';
         }
 
-        el.style.color = price > lastPrice ? '#00ff88' : '#f23645';
         el.innerText = '$' + price;
-        document.getElementById('vol-stat').innerText = `24h VOL: ${(parseFloat(data.v)/1000).toFixed(1)}k BTC`;
+        
+        // Округляем объем до миллионов для читаемости
+        const vol = (parseFloat(data.q) / 1000000).toFixed(2);
+        document.getElementById('vol-stat').innerText = `24h VOL: ${vol}M USDT`;
         lastPrice = price;
     };
 
+    btcSocket.onerror = (err) => {
+        console.error("WebSocket error:", err);
+        document.getElementById('btc-price').innerText = "Conn Error";
+    };
+
+    // API Stats
     async function fetchStats() {
         try {
             const fg = await (await fetch('https://api.alternative.me/fng/')).json();
-            document.getElementById('fg-value').innerText = fg.data[0].value;
-            document.getElementById('fg-text').innerText = fg.data[0].value_classification;
-            document.getElementById('gas-value').innerText = Math.floor(Math.random() * (25 - 12) + 12) + " Gwei";
-        } catch(e) {}
+            if(fg.data && fg.data[0]) {
+                document.getElementById('fg-value').innerText = fg.data[0].value;
+                document.getElementById('fg-text').innerText = fg.data[0].value_classification;
+                // Цвет в зависимости от индекса
+                const val = fg.data[0].value;
+                const fgEl = document.getElementById('fg-value');
+                if(val >= 75) fgEl.style.color = 'var(--accent)';
+                else if(val <= 25) fgEl.style.color = 'var(--danger)';
+                else fgEl.style.color = 'var(--text)';
+            }
+            
+            // Хардкод газа (т.к. бесплатного API нет без ключа)
+            document.getElementById('gas-value').innerText = Math.floor(Math.random() * (20 - 10) + 10) + " Gwei";
+        } catch(e) {
+            console.error("Stats fetch error:", e);
+        }
     }
 
-    setInterval(update, 1000);
-    setInterval(fetchStats, 60000);
-    setInterval(fetchNews, 900000); // Обновление новостей раз в 15 минут
+    // Интервалы
+    setInterval(updateClockAndCursor, 1000); // Часы и курсор - каждую секунду
+    setInterval(renderSessions, 60000);      // Сетка сессий - раз в минуту
+    setInterval(fetchStats, 300000);          // Статы - раз в 5 минут
+    setInterval(fetchNews, 900000);           // Новости - раз в 15 минут
     
-    update(); fetchStats(); fetchNews();
-    document.body.onclick = () => { if(audioCtx.state === 'suspended') audioCtx.resume(); };
+    // Стартовый запуск
+    updateClockAndCursor();
+    renderSessions();
+    fetchStats();
+    fetchNews();
+
+    // Разблокировка звука
+    document.body.onclick = () => { 
+        if(audioCtx.state === 'suspended') {
+            audioCtx.resume().then(() => console.log('AudioContext activated'));
+        } 
+    };
 </script>
-    <div style="position: fixed; bottom: 10px; right: 10px; font-size: 12px; font-family: 'Segoe UI', sans-serif; color: #FFD700; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); font-weight: bold; opacity: 0.8; pointer-events: none; z-index: 9999;">
+
+<div style="position: fixed; bottom: 10px; right: 10px; font-size: 12px; font-family: 'Segoe UI', sans-serif; color: #FFD700; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); font-weight: bold; opacity: 0.5; pointer-events: none; z-index: 9999;">
     Baitan_0501 白坦
 </div>
+
 </body>
 </html>
