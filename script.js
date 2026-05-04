@@ -1,17 +1,16 @@
 function enableBackgroundMode() {
     const audio = document.getElementById('silent-audio');
-    
-    // Генерируем микро-дорожку тишины (Base64 WAV)
+    // Микро-тишина в формате Base64, чтобы не грузить лишние файлы
     const silentWav = "data:audio/wav;base64,UklGRigAAABXQVZFRm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAP8A";
     audio.src = silentWav;
     
     audio.play().then(() => {
-        console.log("✅ Фоновый режим активирован (тишина запущена)");
+        console.log("✅ Фоновый режим: ТИШИНА ЗАПУЩЕНА");
     }).catch(err => {
-        console.warn("⚠️ Фоновый режим ожидает клика");
+        console.warn("⚠️ Фоновый режим: Жду клика пользователя");
     });
 
-    // Дополнительно: просим экран не гаснуть, если браузер поддерживает
+    // Просим систему не гасить экран (Wake Lock API)
     if ('wakeLock' in navigator) {
         navigator.wakeLock.request('screen').catch(() => {});
     }
