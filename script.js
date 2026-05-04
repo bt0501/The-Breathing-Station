@@ -149,7 +149,15 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(fetchNews, 900000);
 });
 
-document.body.onclick = () => { if(audioCtx.state === 'suspended') audioCtx.resume(); };
+document.body.onclick = () => { 
+    // Запуск аудио-контекста для твоих звуков (пиков)
+    if(audioCtx.state === 'suspended') audioCtx.resume(); 
+    
+    // Запуск "тишины" для обхода спящего режима
+    enableBackgroundMode();
+    
+    console.log("🦾 Система мониторинга полностью разблокирована");
+};
 
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').then(() => console.log("SW Registered"));
