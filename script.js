@@ -148,12 +148,15 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(fetchNews, 900000);
 });
 
+let isActivated = false;
+
 document.body.onclick = () => { 
-    // Запуск аудио-контекста для твоих звуков (пиков)
+    if (isActivated) return; // Если уже активировали, больше ничего не делаем
+
     if(audioCtx.state === 'suspended') audioCtx.resume(); 
     
-    // Запуск "тишины" для обхода спящего режима
     enableBackgroundMode();
+    isActivated = true;
     
     console.log("🦾 Система мониторинга полностью разблокирована");
 };
