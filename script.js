@@ -1,3 +1,21 @@
+function enableBackgroundMode() {
+    const audio = document.getElementById('silent-audio');
+    
+    // Генерируем микро-дорожку тишины (Base64 WAV)
+    const silentWav = "data:audio/wav;base64,UklGRigAAABXQVZFRm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAP8A";
+    audio.src = silentWav;
+    
+    audio.play().then(() => {
+        console.log("✅ Фоновый режим активирован (тишина запущена)");
+    }).catch(err => {
+        console.warn("⚠️ Фоновый режим ожидает клика");
+    });
+
+    // Дополнительно: просим экран не гаснуть, если браузер поддерживает
+    if ('wakeLock' in navigator) {
+        navigator.wakeLock.request('screen').catch(() => {});
+    }
+}
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
 function playTick(freq = 440) {
