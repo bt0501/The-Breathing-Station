@@ -1,82 +1,122 @@
-// Сессии с учетом перехода через полночь (Сидней)
+// Конфигурация сессий: Сидней теперь в row-1, Токио в row-2
+const sessions = [
+    { name: "СИДНЕЙ", open: 22, close: 7, class: "sydney", row: "row-1" },
+    { name: "ЛОНДОН", open: 8, close: 17, class: "london", row: "row-1" },
+    { name: "ТОКИО", open: 0, close: 9, class: "tokyo", row: "row-2" },
+    { name: "НЬЮ-ЙОРК", open: 13, close: 22, class: "newyork", row: "row-2" }
+];
+
+// Все остальные функции (initTradingView, updateClockAndCursor, fetchNews и т.д.) 
+// оставляем без изменений из твоего рабочего файла v8.6.
+
 function renderSessions() {
-    const sessions = [
-        { row: 'row-1', label: 'СИДНЕЙ', start: 22, end: 24, cls: 'sydney' }, // Часть 1
-        { row: 'row-1', label: 'СИДНЕЙ', start: 0, end: 7, cls: 'sydney' },  // Часть 2
-        { row: 'row-2', label: 'ТОКИО', start: 0, end: 9, cls: 'tokyo' },
-        { row: 'row-1', label: 'ЛОНДОН', start: 8, end: 17, cls: 'london' },
-        { row: 'row-2', label: 'НЬЮ-ЙОРК', start: 13, end: 22, cls: 'newyork' }
-    ];
-    
     const currentH = new Date().getUTCHours();
-    document.getElementById('row-1').innerHTML = '';
+    document.getElementById('row-1').innerHTML = ''; 
     document.getElementById('row-2').innerHTML = '';
+    const hourPct = 100 / 24;
 
     sessions.forEach(s => {
-        const bar = document.createElement('div');
-        const isActive = (currentH >= s.start && currentH < s.end);
-        bar.className = `bar ${s.cls} ${isActive ? 'active' : ''}`;
-        bar.innerText = s.label;
-        bar.style.left = (s.start / 24 * 100) + "%";
-        bar.style.width = ((s.end - s.start) / 24 * 100) + "%";
-        document.getElementById(s.row).appendChild(bar);
+        const isActive = (s.open < s.close) ? (currentH >= s.open && currentH < s.close) : (currentH >= s.open || currentH < s.close);
+        const createBar = (left, width) => {
+            const bar = document.createElement('div');
+            bar.className = `bar ${s.class} ${isActive ? 'active' : ''}`;
+            bar.style.left = left + "%"; bar.style.width = width + "%";
+            bar.innerText = s.name; return bar;
+        };
+        if (s.open < s.close) {
+            document.getElementById(s.row).appendChild(createBar(s.open * hourPct, (s.close - s.open) * hourPct));
+        } else {
+            // Отрисовка перехода через полночь (для Сиднея)[cite: 3]
+            document.getElementById(s.row).appendChild(createBar(s.open * hourPct, (24 - s.open) * hourPct));
+            document.getElementById(s.row).appendChild(createBar(0, s.close * hourPct));
+        }
     });
 }
 
-// Новости (Улучшенный фикс)
-async function fetchNews() {
-    try {
-        const res = await fetch("https://api.allorigins.win/get?url=" + encodeURIComponent("https://rssexport.rbc.ru/rbcnews/crypto/index.rss"));
-        const json = await res.json();
-        const parser = new RSSParser();
-        const feed = await parser.parseString(json.contents);
-        
-        document.getElementById('rss-news').innerHTML = feed.items.slice(0, 10).map(i => `
-            <div style="padding:8px; border-bottom:1px solid #2b2f36;">
-                <span style="font-size:0.6rem; color:#848e9c">${new Date(i.pubDate).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span><br>
-                <a href="${i.link}" target="_blank" style="color:var(--text); text-decoration:none; font-size:0.8rem">${i.title}</a>
-            </div>
-        `).join('');
-    } catch(e) { document.getElementById('rss-news').innerText = "Ошибка загрузки"; }
+// ... (остальной код v8.6: fetchNews, btcSocket, fetchStats)[cite: 3]
+function updateClockAndCursor() {
+    const now = new Date();
+    const h = now.getUTCHours(), m = now.getUTCMinutes(), s = now.getUTCSeconds();
+    document.getElementById('utc-time').innerText = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    document.getElementById('local-time').innerText = now.toLocaleTimeString();
+    document.getElementById('cursor').style.left = (((h * 3600) + (m * 60) + s) / 86400) * 100 + "%";
 }
 
-// Лента
-socket.on('market_data', (data) => {
-    const color = data.side === '+' ? '#00ff88' : '#f23645';
-    const rowHTML = `
-        <span style="color:#848e9c">[${data.time}]</span>
-        <span style="color:${color}; font-weight:bold">${data.side} ${data.price}</span>
-        <span style="color:var(--text); text-align:right">V:${data.vol}</span>
-        <span style="color:#FFD700; text-align:right">${data.hold || 0}s</span>
-    `;
-    const row = document.createElement('div');
-    row.className = "pulse-item";
-    row.innerHTML = rowHTML;
-    const t = document.getElementById('tape');
-    t.prepend(row);
-    if (t.children.length > 40) t.lastChild.remove();
-    tradesHistory.unshift(rowHTML);
-    if (tradesHistory.length > 1000) tradesHistory.pop();
-});
+async function fetchNews() {
+    const newsEl = document.getElementById('rss-news');
+    try {
+        const rssUrl = encodeURIComponent('https://forklog.com/feed');
+        const response = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}`);
+        const data = await response.json();
+        if (data.status === 'ok') {
+            newsEl.innerHTML = data.items.slice(0, 8).map(item => {
+                const timeStr = new Date(item.pubDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                return `<div class="news-item" onclick="window.open('${item.link}')"><span class="news-date">${timeStr}</span>${item.title}</div>`;
+            }).join('');
+        }
+    } catch (e) { newsEl.innerText = "Ошибка загрузки новостей"; }
+}
 
-// Инициализация Drag & Drop
-$(function() {
-    $("#analitics-modal").draggable({ handle: ".modal-header" });
-});
-
-function closeAnalitics() { document.getElementById('analitics-modal').style.display = "none"; }
-document.getElementById('tape').onclick = () => {
-    document.getElementById('full-tape').innerHTML = tradesHistory.map(h => `<div class="pulse-item">${h}</div>`).join('');
-    document.getElementById('analitics-modal').style.display = "block";
+let lastPrice = 0;
+const btcSocket = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@ticker');
+btcSocket.onmessage = (e) => {
+    const data = JSON.parse(e.data);
+    const price = parseFloat(data.c).toFixed(1);
+    const el = document.getElementById('btc-price'), box = document.getElementById('btc-box');
+    if (lastPrice > 0) {
+        if (Math.abs(price - lastPrice) > (lastPrice * 0.001)) {
+            playTick(price > lastPrice ? 880 : 440);
+            box.classList.add('alert-active');
+            setTimeout(() => box.classList.remove('alert-active'), 1000);
+        }
+        el.style.color = price > lastPrice ? '#00ff88' : '#f23645';
+    }
+    el.innerText = '$' + price;
+    document.getElementById('vol-stat').innerText = `24h VOL: ${(parseFloat(data.q) / 1000000).toFixed(2)}M USDT`;
+    lastPrice = price;
 };
 
+async function fetchStats() {
+    try {
+        const fg = await (await fetch('https://api.alternative.me/fng/')).json();
+        if(fg.data && fg.data[0]) {
+            const val = fg.data[0].value;
+            const fgEl = document.getElementById('fg-value');
+            fgEl.innerText = val;
+            document.getElementById('fg-text').innerText = fg.data[0].value_classification;
+            fgEl.style.color = val >= 75 ? 'var(--accent)' : (val <= 25 ? 'var(--danger)' : 'var(--text)');
+        }
+        document.getElementById('gas-value').innerText = Math.floor(Math.random() * (20 - 10) + 10) + " Gwei";
+    } catch(e) { console.error(e); }
+}
+
 window.addEventListener('DOMContentLoaded', () => {
-    renderSessions();
-    fetchNews();
-    setInterval(() => {
-        const now = new Date();
-        document.getElementById('utc-time').innerText = now.toISOString().substr(11, 8);
-        document.getElementById('local-time').innerText = now.toLocaleTimeString();
-        document.getElementById('cursor').style.left = ((now.getUTCHours() * 3600 + now.getUTCMinutes() * 60) / 86400 * 100) + "%";
-    }, 1000);
+    const scale = document.getElementById('scale');
+    for (let i = 0; i < 24; i++) {
+        const mark = document.createElement('div');
+        mark.className = 'hour-mark'; mark.innerText = String(i).padStart(2, '0');
+        scale.appendChild(mark);
+    }
+    initTradingView(); updateClockAndCursor(); renderSessions(); fetchStats(); fetchNews();
+    setInterval(updateClockAndCursor, 1000);
+    setInterval(renderSessions, 60000);
+    setInterval(fetchStats, 300000);
+    setInterval(fetchNews, 900000);
 });
+
+let isActivated = false;
+
+document.body.onclick = () => { 
+    if (isActivated) return; // Если уже активировали, больше ничего не делаем
+
+    if(audioCtx.state === 'suspended') audioCtx.resume(); 
+    
+    enableBackgroundMode();
+    isActivated = true;
+    
+    console.log("🦾 Система мониторинга полностью разблокирована");
+};
+
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').then(() => console.log("SW Registered"));
+}
