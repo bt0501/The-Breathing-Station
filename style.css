@@ -61,20 +61,53 @@ body {
 
 /* ФИКС ДЛЯ ТЕЛЕФОНА: если экран узкий, выстраиваем всё в колонку */
 @media (max-width: 1000px) {
+    .main-container { padding: 10px; width: 100%; border-radius: 0; }
     .tools-grid {
-        grid-template-columns: 1fr;
-        height: auto;
-    }
-    .top-panel {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr !important; /* Всё в одну колонку */
+        display: flex;
+        flex-direction: column;
         gap: 10px;
     }
-    #tradingview_chart {
-        height: 400px !important; /* Даем графику фиксированную высоту на мобиле */
+
+    /* Ограничиваем терминал на телефоне, чтобы он не съедал экран */
+    .box:first-child { 
+        height: 250px !important; 
+        order: 1; /* Терминал сверху */
     }
-    #utc-time { font-size: 2rem; }
+
+    .box:nth-child(2) { 
+        height: 450px !important; 
+        order: 2; /* График под ним */
+    }
+
+    #utc-time { font-size: 1.8rem; }
+    .top-panel { grid-template-columns: 1fr 1fr; gap: 5px; }
 }
 
+/* Стиль для модального окна аналитики */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 10000;
+    left: 0; top: 0; width: 100%; height: 100%;
+    background: var(--bg);
+    padding: 20px;
+    box-sizing: border-box;
+}
+.modal-content {
+    background: var(--container-bg);
+    height: 90%;
+    overflow-y: auto;
+    border: 1px solid var(--accent);
+    padding: 15px;
+    font-family: monospace;
+}
+.close-modal {
+    color: var(--danger);
+    float: right;
+    font-size: 2rem;
+    cursor: pointer;
+}
 /* Контейнер графика должен быть виден */
 #tradingview_chart {
     width: 100%;
@@ -103,59 +136,56 @@ body {
     padding: 8px; 
     background: #181a20; 
 }
-.nav-btn { background: #2b2f36; color: white; border: 1px solid #3d434d; padding: 8px; border-radius: 6px; cursor: pointer; font-size: 0.7rem; font-weight: bold; width: 100%; box-sizing: border-box;}
+.nav-btn { 
+    background: #2b2f36; color: white; border: 1px solid #3d434d; 
+    padding: 8px; border-radius: 6px; cursor: pointer; font-size: 0.7rem; 
+    font-weight: bold; width: 100%; box-sizing: border-box;
+}
 .nav-btn:hover { background: #3d434d; }
 
-@keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(242, 54, 69, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(242, 54, 69, 0); } 100% { box-shadow: 0 0 0 0 rgba(242, 54, 69, 0); } }
-/* Пульсация при аномалиях */
+/* Анимация пульсации (оставил одну) */
+@keyframes pulse-red { 
+    0% { box-shadow: 0 0 0 0 rgba(242, 54, 69, 0.7); } 
+    70% { box-shadow: 0 0 0 15px rgba(242, 54, 69, 0); } 
+    100% { box-shadow: 0 0 0 0 rgba(242, 54, 69, 0); } 
+}
+
 .alert-active { 
     animation: pulse-red 0.5s 2; 
     border-color: var(--danger) !important;
     background: rgba(242, 54, 69, 0.15) !important;
 }
 
-@keyframes pulse-red { 
-    0% { box-shadow: 0 0 0 0 rgba(242, 54, 69, 0.7); } 
-    70% { box-shadow: 0 0 0 15px rgba(242, 54, 69, 0); } 
-    100% { box-shadow: 0 0 0 0 rgba(242, 54, 69, 0); } 
+.watermark { 
+    position: fixed; bottom: 10px; right: 10px; font-size: 12px; 
+    font-family: 'Segoe UI', sans-serif; color: #FFD700; 
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5); font-weight: bold; 
+    opacity: 0.5; pointer-events: none; z-index: 9999; 
 }
 
-@keyframes pulse-red { 
-    0% { box-shadow: 0 0 0 0 rgba(242, 54, 69, 0.7); } 
-    70% { box-shadow: 0 0 0 15px rgba(242, 54, 69, 0); } 
-    100% { box-shadow: 0 0 0 0 rgba(242, 54, 69, 0); } 
-}
-
-.watermark { position: fixed; bottom: 10px; right: 10px; font-size: 12px; font-family: 'Segoe UI', sans-serif; color: #FFD700; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); font-weight: bold; opacity: 0.5; pointer-events: none; z-index: 9999; }
-#trading-terminal {
-    background: #111;
-    color: #00ff00;
-    font-family: 'Courier New', monospace;
-    padding: 15px;
-    border: 1px solid #333;
-    margin: 10px 0;
-}
-
-#status {
-    color: #ff0000;
-}
-
+/* Стили терминала - теперь гармонируют с общим дизайном */
 #tape {
-    height: 150px;
-    overflow-y: hidden;
-    font-size: 0.9em;
-    line-height: 1.2;
+    height: 100%;
+    overflow-y: auto; /* Разрешаем скролл */
+    font-size: 0.85rem;
+    line-height: 1.4;
+    font-family: 'Courier New', monospace;
+    scrollbar-width: thin; /* Тонкий скролл для Firefox */
 }
 
 .terminal-footer {
-    border-top: 1px solid #333;
+    border-top: 1px solid var(--grid);
     padding-top: 5px;
     margin-top: 5px;
-    font-size: 0.8em;
+    font-size: 0.7rem;
     display: flex;
     justify-content: space-between;
+    color: #848e9c;
 }
-
-#web-hold {
-    color: #fff;
+#tape::-webkit-scrollbar, .modal-content::-webkit-scrollbar {
+    width: 4px;
+}
+#tape::-webkit-scrollbar-thumb, .modal-content::-webkit-scrollbar-thumb {
+    background: var(--grid);
+    border-radius: 10px;
 }
