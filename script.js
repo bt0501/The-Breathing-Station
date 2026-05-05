@@ -1,35 +1,19 @@
-function enableBackgroundMode() {
-    const audio = document.getElementById('silent-audio');
-    // Микро-тишина в формате Base64, чтобы не грузить лишние файлы
-    const silentWav = "data:audio/wav;base64,UklGRigAAABXQVZFRm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAP8A";
-    audio.src = silentWav;
-    
-    audio.play().then(() => {
-        console.log("✅ Фоновый режим: ТИШИНА ЗАПУЩЕНА");
-    }).catch(err => {
-        console.warn("⚠️ Фоновый режим: Жду клика пользователя");
-    });
-
-    // Просим систему не гасить экран (Wake Lock API)
-    if ('wakeLock' in navigator) {
-        navigator.wakeLock.request('screen').catch(() => {});
-    }
-}
+// --- КОНФИГ И СОКЕТЫ ---
+const LOCAL_IP = "http://192.168.1.118:8080";
+const socket = io(LOCAL_IP);
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-function playTick(freq = 440) {
-    if (audioCtx.state === 'suspended') return;
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.connect(gain); gain.connect(audioCtx.destination);
-    osc.frequency.value = freq; 
-    gain.gain.setValueAtTime(0.03, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.1);
-    osc.start();
-    osc.onended = () => { osc.disconnect(); gain.disconnect(); };
-    osc.stop(audioCtx.currentTime + 0.1);
-}
+// --- BTC LIVE PRICE (BINANCE WEBSOCKET) ---
+const btcWs = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@ticker');
+btcWs.onmessage = (e) => {
+    const data = JSON.parse(e.data);
+    const price = parseFloat(data.c).toFixed(2);
+    const el = document.getElementById('btc-price');
+    el.innerText = `$${price}`;
+    el.style.color = parseFloat(data.p) >= 0 ? 'var(--accent)' : 'var(--danger)';
+};
 
+// --- ФУНКЦИИ ВРЕМЕНИ И СЕССИЙ ---
 const sessions = [
     { name: "СИДНЕЙ", open: 21, close: 6, class: "sydney", row: "row-1" },
     { name: "ЛОНДОН", open: 7, close: 16, class: "london", row: "row-1" },
@@ -37,30 +21,19 @@ const sessions = [
     { name: "НЬЮ-ЙОРК", open: 13, close: 22, class: "newyork", row: "row-2" }
 ];
 
-function initTradingView() {
-    new TradingView.widget({
-        "autosize": true, // Это критически важно для мобилок
-        "symbol": "BINANCE:BTCUSDT",
-        "interval": "15",
-        "timezone": "Etc/UTC",
-        "theme": "dark",
-        "style": "1",
-        "locale": "ru",
-        "container_id": "tradingview_chart",
-        "hide_side_toolbar": false,
-        "allow_symbol_change": true,
-        "details": true,
-        "hotlist": true,
-        "calendar": true,
-    });
+function updateClockAndCursor() {
+    const now = new Date();
+    const h = now.getUTCHours(), m = now.getUTCMinutes(), s = now.getUTCSeconds();
+    document.getElementById('utc-time').innerText = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    document.getElementById('local-time').innerText = now.toLocaleTimeString();
+    document.getElementById('cursor').style.left = (((h * 3600) + (m * 60) + s) / 86400) * 100 + "%";
 }
 
 function renderSessions() {
     const currentH = new Date().getUTCHours();
-    document.getElementById('row-1').innerHTML = ''; 
-    document.getElementById('row-2').innerHTML = '';
     const hourPct = 100 / 24;
-
+    ['row-1', 'row-2'].forEach(id => document.getElementById(id).innerHTML = '');
+    
     sessions.forEach(s => {
         const isActive = (s.open < s.close) ? (currentH >= s.open && currentH < s.close) : (currentH >= s.open || currentH < s.close);
         const createBar = (left, width) => {
@@ -78,62 +51,24 @@ function renderSessions() {
     });
 }
 
-function updateClockAndCursor() {
-    const now = new Date();
-    const h = now.getUTCHours(), m = now.getUTCMinutes(), s = now.getUTCSeconds();
-    document.getElementById('utc-time').innerText = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-    document.getElementById('local-time').innerText = now.toLocaleTimeString();
-    document.getElementById('cursor').style.left = (((h * 3600) + (m * 60) + s) / 86400) * 100 + "%";
-}
+// --- ТЕРМИНАЛ ---
+socket.on('connect', () => {
+    document.getElementById('status').innerText = "ONLINE";
+    document.getElementById('status').style.color = "var(--accent)";
+});
 
-async function fetchNews() {
-    const newsEl = document.getElementById('rss-news');
-    try {
-        const rssUrl = encodeURIComponent('https://forklog.com/feed');
-        const response = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}`);
-        const data = await response.json();
-        if (data.status === 'ok') {
-            newsEl.innerHTML = data.items.slice(0, 8).map(item => {
-                const timeStr = new Date(item.pubDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                return `<div class="news-item" onclick="window.open('${item.link}')"><span class="news-date">${timeStr}</span>${item.title}</div>`;
-            }).join('');
-        }
-    } catch (e) { newsEl.innerText = "Ошибка загрузки новостей"; }
-}
+socket.on('market_data', (data) => {
+    const tape = document.getElementById('tape');
+    const row = document.createElement('div');
+    row.className = "pulse-item";
+    const color = data.side === '+' ? 'var(--accent)' : 'var(--danger)';
+    row.innerHTML = `<span style="color:#848e9c">[${data.time}]</span> <span style="color:${color}; font-weight:bold">${data.side} $${data.price}</span>`;
+    tape.prepend(row);
+    if (tape.children.length > 30) tape.removeChild(tape.lastChild);
+    document.getElementById('web-hold').innerText = data.hold || 0;
+});
 
-let lastPrice = 0;
-const btcSocket = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@ticker');
-btcSocket.onmessage = (e) => {
-    const data = JSON.parse(e.data);
-    const price = parseFloat(data.c).toFixed(1);
-    const el = document.getElementById('btc-price'), box = document.getElementById('btc-box');
-    if (lastPrice > 0) {
-        if (Math.abs(price - lastPrice) > (lastPrice * 0.001)) {
-            playTick(price > lastPrice ? 880 : 440);
-            box.classList.add('alert-active');
-            setTimeout(() => box.classList.remove('alert-active'), 1000);
-        }
-        el.style.color = price > lastPrice ? '#00ff88' : '#f23645';
-    }
-    el.innerText = '$' + price;
-    document.getElementById('vol-stat').innerText = `24h VOL: ${(parseFloat(data.q) / 1000000).toFixed(2)}M USDT`;
-    lastPrice = price;
-};
-
-async function fetchStats() {
-    try {
-        const fg = await (await fetch('https://api.alternative.me/fng/')).json();
-        if(fg.data && fg.data[0]) {
-            const val = fg.data[0].value;
-            const fgEl = document.getElementById('fg-value');
-            fgEl.innerText = val;
-            document.getElementById('fg-text').innerText = fg.data[0].value_classification;
-            fgEl.style.color = val >= 75 ? 'var(--accent)' : (val <= 25 ? 'var(--danger)' : 'var(--text)');
-        }
-        document.getElementById('gas-value').innerText = Math.floor(Math.random() * (20 - 10) + 10) + " Gwei";
-    } catch(e) { console.error(e); }
-}
-
+// --- ЗАПУСК ---
 window.addEventListener('DOMContentLoaded', () => {
     const scale = document.getElementById('scale');
     for (let i = 0; i < 24; i++) {
@@ -141,63 +76,14 @@ window.addEventListener('DOMContentLoaded', () => {
         mark.className = 'hour-mark'; mark.innerText = String(i).padStart(2, '0');
         scale.appendChild(mark);
     }
-    initTradingView(); updateClockAndCursor(); renderSessions(); fetchStats(); fetchNews();
+    new TradingView.widget({
+        "autosize": true, "symbol": "BINANCE:BTCUSDT", "interval": "15",
+        "theme": "dark", "container_id": "tradingview_chart", "locale": "ru"
+    });
     setInterval(updateClockAndCursor, 1000);
-    setInterval(renderSessions, 60000);
-    setInterval(fetchStats, 300000);
-    setInterval(fetchNews, 900000);
+    updateClockAndCursor();
+    renderSessions();
 });
 
-let isActivated = false;
-
-document.body.onclick = () => { 
-    if (isActivated) return; // Если уже активировали, больше ничего не делаем
-
-    if(audioCtx.state === 'suspended') audioCtx.resume(); 
-    
-    enableBackgroundMode();
-    isActivated = true;
-    
-    console.log("🦾 Система мониторинга полностью разблокирована");
-};
-
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js').then(() => console.log("SW Registered"));
-}
-// Твой локальный адрес (Кривой Рог, 192.168.1.118)
-const LOCAL_IP = "http://192.168.1.118:8080";
-const socket = io(LOCAL_IP);
-
-const tape = document.getElementById('tape');
-const status = document.getElementById('status');
-const webHold = document.getElementById('web-hold');
-
-socket.on('connect', () => {
-    status.innerText = "ONLINE (LOCAL)";
-    status.style.color = "#00ff00";
-});
-
-socket.on('connect_error', () => {
-    status.innerText = "OFFLINE";
-    status.style.color = "#ff0000";
-});
-
-socket.on('market_data', (data) => {
-    const row = document.createElement('div');
-    const color = data.side === '+' ? '#00ff00' : '#ff4444';
-    
-    // Выводим время, сторону, цену, объем (V) и количество сделок (T)
-    row.innerHTML = `[${data.time}] <span style="color:${color}">${data.side} $${data.price}</span> | V: ${data.vol} | T: ${data.trades}`;
-    
-    tape.prepend(row);
-    
-    // Ограничиваем количество строк в ленте
-    if (tape.children.length > 15) {
-        tape.removeChild(tape.lastChild);
-    }
-    
-    // Обновляем счетчик заморозки цены
-    if (webHold) {
-        webHold.innerText = data.hold;
-    }
-});
+// Клик для активации звука
+document.body.onclick = () => { if(audioCtx.state === 'suspended') audioCtx.resume(); };
