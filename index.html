@@ -3,12 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Breathing Station v8.6 - News Restored</title>
-    
+    <title>The Breathing Station v8.6 - Baitan_0501 白坦</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <link rel="icon" type="image/png" href="https://github.com/bt0501/The-Breathing-Station/blob/main/ico.png?raw=true">
-    <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="style.css">
-
     <script src="https://s3.tradingview.com/tv.js"></script>
 </head>
 <body>
@@ -30,63 +28,41 @@
     </div>
 
     <div class="tools-grid">
-        <div class="box">
-            <div class="box-header"><div class="box-title">Рыночный Пульс</div></div>
-            <div class="scroll-area">
-                <div class="pulse-item"><span class="pulse-label">Доминация BTC</span><span class="pulse-value">54.2%</span></div>
-                <div class="pulse-item"><span class="pulse-label">Ликвидации (24ч)</span><span class="pulse-value" style="color:var(--danger)">$142M</span></div>
-                <div class="pulse-item"><span class="pulse-label">Волатильность (15м)</span><span class="pulse-value">0.12%</span></div>
-                <hr style="border:0; border-top:1px solid var(--grid); margin:15px 0;">
-                <div class="box-title" style="margin-bottom:10px;">Новости (RU)</div>
-                <div id="rss-news">Загрузка ленты...</div>
-            </div>
-        </div>
-
+        <!-- ТЕРМИНАЛ -->
         <div class="box">
             <div class="box-header">
-                <div class="box-title">BTC/USDT 15M CHART</div>
-                <div id="vol-stat" style="font-size: 0.65rem; color: #848e9c;">VOL: ---</div>
+                <div class="box-title">📡 LIVE TERMINAL: <span id="status">OFFLINE</span></div>
             </div>
-            <div style="flex:1; position: relative;">
-                <div id="tradingview_chart" style="height:100%; width:100%;"></div>
+            <div class="scroll-area" id="tape" style="font-family: 'Courier New', monospace; font-size: 0.85rem;">
+                <div style="color: #848e9c;">Ожидание данных от бота...</div>
             </div>
-            <div class="btn-group">
-                <button class="nav-btn" onclick="window.open('https://aggr.trade/t5k8')">AGGR.TRADE 🔊</button>
-                <button class="nav-btn" onclick="window.open('https://www.coinglass.com/pro/futures/LiquidationMap')">COINGLASS 🔥</button>
-                <button class="nav-btn" onclick="window.open('https://www.tensorcharts.com/')">TENSORCHARTS 📊</button>
+            <div class="terminal-footer" style="padding: 5px 15px; border-top: 1px solid var(--grid); font-size: 0.7rem; display: flex; justify-content: space-between;">
+                <span>HOLD: <b id="web-hold">0</b>s</span>
+                <span style="opacity: 0.5;">Baitan_0501 白坦</span>
             </div>
         </div>
 
+        <!-- ГРАФИК -->
         <div class="box">
-            <div class="box-header"><div class="box-title">События дня</div></div>
-            <div class="scroll-area" id="calendar-list">
-                <div class="event-item"><span><b style="color:var(--local)">15:30</b> США: Безработица</span><span>🔥🔥</span></div>
-                <div class="event-item"><span><b style="color:var(--local)">17:00</b> Индекс доверия</span><span>🔥</span></div>
-                <div class="event-item"><span><b style="color:var(--local)">23:00</b> Закрытие CME</span><span>🔥🔥</span></div>
-                <div class="event-item"><span><b style="color:var(--local)">00:00</b> Daily Close</span><span>🔥</span></div>
+            <div class="box-header"><div class="box-title">BTC/USDT 15M</div><div id="vol-stat" style="font-size: 0.65rem; color: #848e9c;">VOL: ---</div></div>
+            <div style="flex:1; position: relative;"><div id="tradingview_chart" style="height:100%; width:100%;"></div></div>
+            <div class="btn-group">
+                <button class="nav-btn" onclick="window.open('https://aggr.trade/t5k8')">AGGR</button>
+                <button class="nav-btn" onclick="window.open('https://www.coinglass.com/pro/futures/LiquidationMap')">LIQ MAP</button>
+                <button class="nav-btn" onclick="window.open('https://www.tensorcharts.com/')">TENSOR</button>
             </div>
+        </div>
+
+        <!-- НОВОСТИ -->
+        <div class="box">
+            <div class="box-header"><div class="box-title">Crypto News</div></div>
+            <div class="scroll-area" id="rss-news">Загрузка ленты...</div>
         </div>
     </div>
 </div>
 
 <div class="watermark">Baitan_0501 白坦</div>
-
-<script src="script.js"></script>
-    <!-- Добавить перед <script src="script.js"></script> -->
 <audio id="silent-audio" loop preload="auto" style="display:none;"></audio>
-    <!-- В <head> или перед твоим script.js -->
-<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-
-<!-- В нужное место в <body> -->
-<div id="trading-terminal">
-    <h4>📡 LIVE TERMINAL: <span id="status">OFFLINE</span></h4>
-    <div id="tape">
-        <!-- Сюда будут лететь сделки -->
-    </div>
-    <div class="terminal-footer">
-        <span>HOLD: <b id="web-hold">0</b>s</span>
-        <span>ID: Baitan_0501 白坦</span>
-    </div>
-</div>
+<script src="script.js"></script>
 </body>
 </html>
