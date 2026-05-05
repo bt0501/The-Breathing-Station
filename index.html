@@ -3,24 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Breathing Station v8.9 - Baitan_0501 白坦</title>
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <title>The Breathing Station v8.6 - Stable</title>
     <link rel="icon" type="image/png" href="https://github.com/bt0501/The-Breathing-Station/blob/main/ico.png?raw=true">
     <link rel="stylesheet" href="style.css">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
     <script src="https://s3.tradingview.com/tv.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/rss-parser@3.12.0/dist/rss-parser.min.js"></script>
 </head>
 <body>
 
 <div class="main-container">
-    <!-- Шапка без изменений -->
     <div class="top-panel">
         <div><div class="label">UTC Time</div><h1 id="utc-time">00:00:00</h1></div>
-        <div class="stat-box"><span class="label">BTC/USDT LIVE</span><span id="btc-price" class="stat-value">$---</span></div>
-        <div class="stat-box"><span class="label">Fear & Greed</span><span id="fg-value" class="stat-value">50</span></div>
-        <div class="stat-box"><span class="label">ETH Gas</span><span id="gas-value" class="stat-value">-- Gwei</span></div>
+        <div id="btc-box" class="stat-box"><span class="label">BTC/USDT LIVE</span><span id="btc-price" class="stat-value" style="color: var(--accent);">$---</span></div>
+        <div class="stat-box"><span class="label">Fear & Greed</span><span id="fg-value" class="stat-value">--</span><span id="fg-text" style="font-size:0.5rem; color:#848e9c;">Loading...</span></div>
+        <div class="stat-box"><span class="label">ETH Gas</span><span id="gas-value" class="stat-value" style="color:var(--local)">-- Gwei</span></div>
         <div style="text-align:right"><div class="label">Local Time</div><div id="local-time" style="font-size:1.2rem; font-weight:bold">00:00:00</div></div>
     </div>
 
@@ -33,39 +28,48 @@
 
     <div class="tools-grid">
         <div class="box">
-            <div class="box-header"><div class="box-title">📡 LIVE TERMINAL</div></div>
-            <div id="tape" class="scroll-area"></div>
-            <div class="terminal-footer"><span>HOLD: <b id="web-hold">0</b>s</span></div>
-        </div>
-
-        <div class="box">
-            <div class="box-header"><div class="box-title">BTC/USDT 15M</div></div>
-            <div style="flex:1;"><div id="tradingview_chart" style="height:100%; width:100%;"></div></div>
-            <div class="btn-group">
-                <button class="nav-btn" onclick="window.open('https://aggr.trade/t5k8')">AGGR</button>
-                <button class="nav-btn" onclick="window.open('https://www.coinglass.com/pro/futures/LiquidationMap')">LIQ MAP</button>
-                <button class="nav-btn" onclick="window.open('https://www.tensorcharts.com/')">TENSOR</button>
+            <div class="box-header"><div class="box-title">Рыночный Пульс</div></div>
+            <div class="scroll-area">
+                <div class="pulse-item"><span class="pulse-label">Доминация BTC</span><span class="pulse-value">54.2%</span></div>
+                <div class="pulse-item"><span class="pulse-label">Ликвидации (24ч)</span><span class="pulse-value" style="color:var(--danger)">$142M</span></div>
+                <div class="pulse-item"><span class="pulse-label">Волатильность (15м)</span><span class="pulse-value">0.12%</span></div>
+                <hr style="border:0; border-top:1px solid var(--grid); margin:15px 0;">
+                <div class="box-title" style="margin-bottom:10px;">Новости (RU)</div>
+                <div id="rss-news">Загрузка ленты...</div>
             </div>
         </div>
 
         <div class="box">
-            <div class="box-header"><div class="box-title">КРИПТО НОВОСТИ</div></div>
-            <div class="scroll-area" id="rss-news">Загрузка...</div>
+            <div class="box-header">
+                <div class="box-title">BTC/USDT 15M CHART</div>
+                <div id="vol-stat" style="font-size: 0.65rem; color: #848e9c;">VOL: ---</div>
+            </div>
+            <div style="flex:1; position: relative;">
+                <div id="tradingview_chart" style="height:100%; width:100%;"></div>
+            </div>
+            <div class="btn-group">
+                <button class="nav-btn" onclick="window.open('https://aggr.trade/t5k8')">AGGR.TRADE 🔊</button>
+                <button class="nav-btn" onclick="window.open('https://www.coinglass.com/pro/futures/LiquidationMap')">COINGLASS 🔥</button>
+                <button class="nav-btn" onclick="window.open('https://www.tensorcharts.com/')">TENSORCHARTS 📊</button>
+            </div>
+        </div>
+
+        <div class="box">
+            <div class="box-header"><div class="box-title">События дня</div></div>
+            <div class="scroll-area" id="calendar-list">
+                <div class="event-item"><span><b style="color:var(--local)">15:30</b> США: Безработица</span><span>🔥🔥</span></div>
+                <div class="event-item"><span><b style="color:var(--local)">17:00</b> Индекс доверия</span><span>🔥</span></div>
+                <div class="event-item"><span><b style="color:var(--local)">23:00</b> Закрытие CME</span><span>🔥🔥</span></div>
+                <div class="event-item"><span><b style="color:var(--local)">00:00</b> Daily Close</span><span>🔥</span></div>
+            </div>
         </div>
     </div>
-    
-    <!-- Твоя подпись золотом в углу -->
-    <div class="signature">Baitan_0501 白坦</div>
 </div>
 
-<div id="analitics-modal" class="modal-float">
-    <div class="modal-header" id="modal-drag">
-        <span>📊 ИСТОРИЯ (1000 тиков)</span>
-        <span class="close-modal" onclick="closeAnalitics()">×</span>
-    </div>
-    <div id="full-tape" class="modal-content-scroll"></div>
-</div>
+<!-- Ватермарк золотом в углу, как и было -->
+<div class="watermark">Baitan_0501 白坦</div>
 
 <script src="script.js"></script>
+<audio id="silent-audio" loop preload="auto" style="display:none;"></audio>
 </body>
 </html>
