@@ -1,13 +1,59 @@
-// Конфигурация сессий: Сидней теперь в row-1, Токио в row-2
+function enableBackgroundMode() {
+    const audio = document.getElementById('silent-audio');
+    // Микро-тишина в формате Base64, чтобы не грузить лишние файлы
+    const silentWav = "data:audio/wav;base64,UklGRigAAABXQVZFRm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAP8A";
+    audio.src = silentWav;
+    
+    audio.play().then(() => {
+        console.log("✅ Фоновый режим: ТИШИНА ЗАПУЩЕНА");
+    }).catch(err => {
+        console.warn("⚠️ Фоновый режим: Жду клика пользователя");
+    });
+
+    // Просим систему не гасить экран (Wake Lock API)
+    if ('wakeLock' in navigator) {
+        navigator.wakeLock.request('screen').catch(() => {});
+    }
+}
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function playTick(freq = 440) {
+    if (audioCtx.state === 'suspended') return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.frequency.value = freq; 
+    gain.gain.setValueAtTime(0.03, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.1);
+    osc.start();
+    osc.onended = () => { osc.disconnect(); gain.disconnect(); };
+    osc.stop(audioCtx.currentTime + 0.1);
+}
+
 const sessions = [
-    { name: "СИДНЕЙ", open: 22, close: 7, class: "sydney", row: "row-1" },
-    { name: "ЛОНДОН", open: 8, close: 17, class: "london", row: "row-1" },
+    { name: "СИДНЕЙ", open: 21, close: 6, class: "sydney", row: "row-1" },
+    { name: "ЛОНДОН", open: 7, close: 16, class: "london", row: "row-1" },
     { name: "ТОКИО", open: 0, close: 9, class: "tokyo", row: "row-2" },
     { name: "НЬЮ-ЙОРК", open: 13, close: 22, class: "newyork", row: "row-2" }
 ];
 
-// Все остальные функции (initTradingView, updateClockAndCursor, fetchNews и т.д.) 
-// оставляем без изменений из твоего рабочего файла v8.6.
+function initTradingView() {
+    new TradingView.widget({
+        "autosize": true, // Это критически важно для мобилок
+        "symbol": "BINANCE:BTCUSDT",
+        "interval": "15",
+        "timezone": "Etc/UTC",
+        "theme": "dark",
+        "style": "1",
+        "locale": "ru",
+        "container_id": "tradingview_chart",
+        "hide_side_toolbar": false,
+        "allow_symbol_change": true,
+        "details": true,
+        "hotlist": true,
+        "calendar": true,
+    });
+}
 
 function renderSessions() {
     const currentH = new Date().getUTCHours();
@@ -26,14 +72,12 @@ function renderSessions() {
         if (s.open < s.close) {
             document.getElementById(s.row).appendChild(createBar(s.open * hourPct, (s.close - s.open) * hourPct));
         } else {
-            // Отрисовка перехода через полночь (для Сиднея)[cite: 3]
             document.getElementById(s.row).appendChild(createBar(s.open * hourPct, (24 - s.open) * hourPct));
             document.getElementById(s.row).appendChild(createBar(0, s.close * hourPct));
         }
     });
 }
 
-// ... (остальной код v8.6: fetchNews, btcSocket, fetchStats)[cite: 3]
 function updateClockAndCursor() {
     const now = new Date();
     const h = now.getUTCHours(), m = now.getUTCMinutes(), s = now.getUTCSeconds();

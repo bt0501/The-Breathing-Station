@@ -1,38 +1,129 @@
-/* Подпись Baitan_0501 白坦 */
-.signature {
-    position: fixed;
-    bottom: 25px;
-    right: 35px;
-    color: #FFD700; /* Золотой */
-    font-size: 0.8rem;
-    font-weight: bold;
-    text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
-    pointer-events: none;
-    z-index: 100;
+:root {
+    --bg: #0b0e11; --container-bg: #181a20; --grid: #2b2f36;
+    --text: #eaecef; --accent: #00ff88; --danger: #f23645;
+    --local: #4aafff; --sydney: #9c27b0; --tokyo: #f0b90b; --london: #3267ff; --newyork: #f23645;
 }
 
-/* Лента: [Время] Цена Объем Удержание */
-.pulse-item {
-    display: grid;
-    grid-template-columns: 80px 105px 70px 40px;
-    gap: 10px;
-    padding: 6px 12px;
-    border-bottom: 1px solid #2b2f36;
-    font-family: 'Roboto Mono', monospace;
-    font-size: 0.85rem;
+body {
+    background-color: var(--bg); color: var(--text);
+    font-family: 'Inter', sans-serif; margin: 0; padding: 10px;
+    display: flex; flex-direction: column; align-items: center;
 }
 
-/* Окно аналитики (теперь перемещаемое) */
-.modal-float {
-    display: none;
-    position: absolute; /* Для Drag & Drop */
-    top: 200px; left: 50%; width: 500px; height: 600px;
-    background: #181a20; border: 1px solid var(--accent);
-    border-radius: 12px; z-index: 9999; box-shadow: 0 0 50px #000;
+.main-container {
+    width: 98%; max-width: 1700px;
+    background: var(--container-bg); padding: 20px; border-radius: 16px;
+    box-shadow: 0 10px 50px rgba(0,0,0,0.8);
 }
-.modal-header { cursor: move; background: #1e2329; padding: 12px; display: flex; justify-content: space-between; border-bottom: 1px solid var(--grid); }
 
-/* Остальное из v8.8 оставляем */
-.bar { position: absolute; height: 100%; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; font-weight: 900; color: white; opacity: 0.2; }
-.bar.active { opacity: 1; }
-.sydney { background: #9c27b0; } .tokyo { background: #f0b90b; color: #000; } .london { background: #3267ff; } .newyork { background: #f23645; }
+.top-panel { 
+    display: grid; grid-template-columns: 1fr auto auto auto auto 1fr; 
+    gap: 15px; align-items: center; margin-bottom: 20px; 
+}
+
+#utc-time { font-size: 2.8rem; font-weight: 800; color: var(--accent); margin: 0; letter-spacing: -1px; }
+
+.stat-box { background: #1e2329; padding: 8px 15px; border-radius: 10px; text-align: center; border: 1px solid var(--grid); min-width: 120px; }
+.stat-value { font-size: 1.1rem; font-weight: bold; display: block; }
+.label { font-size: 0.6rem; color: #848e9c; text-transform: uppercase; margin-bottom: 2px; }
+
+.timeline-wrapper { 
+    position: relative; padding-top: 30px; height: 110px; 
+    margin-bottom: 25px; background: rgba(0,0,0,0.3); 
+    border-radius: 8px; border: 1px solid var(--grid);
+    overflow: hidden;
+}
+
+.time-scale { display: flex; position: absolute; top: 0; left: 0; right: 0; border-bottom: 1px solid var(--grid); height: 25px; }
+.hour-mark { flex: 1; font-size: 0.65rem; color: #848e9c; border-left: 1px solid var(--grid); padding-left: 3px; }
+
+.row { position: relative; height: 32px; width: 100%; margin-top: 6px; }
+.bar { 
+    position: absolute; height: 100%; border-radius: 4px; 
+    display: flex; align-items: center; justify-content: center; 
+    font-size: 0.65rem; font-weight: 900; opacity: 0.2; 
+    color: white; white-space: nowrap; transition: opacity 0.3s, box-shadow 0.3s;
+    box-sizing: border-box; border: 1px solid rgba(255,255,255,0.1);
+}
+.bar.active { opacity: 1; box-shadow: 0 0 15px rgba(0,0,0,0.5); z-index: 10; }
+#cursor { position: absolute; top: 0; bottom: 0; width: 2px; background: #ff3b3b; z-index: 100; box-shadow: 0 0 10px #ff3b3b; }
+
+.sydney { background: var(--sydney); } .tokyo { background: var(--tokyo); color: #000; }
+.london { background: var(--london); } .newyork { background: var(--newyork); }
+
+/* Убеждаемся, что сетка не ломает график на узких экранах */
+.tools-grid { 
+    display: grid; 
+    grid-template-columns: 320px 1fr 320px; 
+    gap: 15px; 
+    min-height: 600px; 
+}
+
+/* ФИКС ДЛЯ ТЕЛЕФОНА: если экран узкий, выстраиваем всё в колонку */
+@media (max-width: 1000px) {
+    .tools-grid {
+        grid-template-columns: 1fr;
+        height: auto;
+    }
+    .top-panel {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+    #tradingview_chart {
+        height: 400px !important; /* Даем графику фиксированную высоту на мобиле */
+    }
+    #utc-time { font-size: 2rem; }
+}
+
+/* Контейнер графика должен быть виден */
+#tradingview_chart {
+    width: 100%;
+    height: 100%;
+    min-height: 400px;
+}
+.box { background: #1e2329; border-radius: 12px; border: 1px solid var(--grid); display: flex; flex-direction: column; overflow: hidden; }
+.box-header { padding: 10px 15px; background: rgba(255,255,255,0.02); border-bottom: 1px solid var(--grid); display: flex; justify-content: space-between; }
+.box-title { font-size: 0.7rem; font-weight: 800; color: var(--accent); text-transform: uppercase; }
+
+.scroll-area { flex: 1; padding: 12px; overflow-y: auto; font-size: 0.8rem; }
+.news-item { margin-bottom: 12px; border-bottom: 1px solid #2b2f36; padding-bottom: 8px; line-height: 1.3; color: #ced4da; cursor: pointer; }
+.news-item:hover { color: var(--accent); }
+.news-date { font-size: 0.65rem; color: #848e9c; display: block; margin-bottom: 3px; }
+
+.pulse-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #2b2f36; }
+.pulse-label { color: #848e9c; }
+.pulse-value { font-weight: bold; }
+
+.event-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #2b2f36; }
+
+.btn-group { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr 1fr; 
+    gap: 8px; 
+    padding: 8px; 
+    background: #181a20; 
+}
+.nav-btn { background: #2b2f36; color: white; border: 1px solid #3d434d; padding: 8px; border-radius: 6px; cursor: pointer; font-size: 0.7rem; font-weight: bold; width: 100%; box-sizing: border-box;}
+.nav-btn:hover { background: #3d434d; }
+
+@keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(242, 54, 69, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(242, 54, 69, 0); } 100% { box-shadow: 0 0 0 0 rgba(242, 54, 69, 0); } }
+/* Пульсация при аномалиях */
+.alert-active { 
+    animation: pulse-red 0.5s 2; 
+    border-color: var(--danger) !important;
+    background: rgba(242, 54, 69, 0.15) !important;
+}
+
+@keyframes pulse-red { 
+    0% { box-shadow: 0 0 0 0 rgba(242, 54, 69, 0.7); } 
+    70% { box-shadow: 0 0 0 15px rgba(242, 54, 69, 0); } 
+    100% { box-shadow: 0 0 0 0 rgba(242, 54, 69, 0); } 
+}
+
+@keyframes pulse-red { 
+    0% { box-shadow: 0 0 0 0 rgba(242, 54, 69, 0.7); } 
+    70% { box-shadow: 0 0 0 15px rgba(242, 54, 69, 0); } 
+    100% { box-shadow: 0 0 0 0 rgba(242, 54, 69, 0); } 
+}
+
+.watermark { position: fixed; bottom: 10px; right: 10px; font-size: 12px; font-family: 'Segoe UI', sans-serif; color: #FFD700; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); font-weight: bold; opacity: 0.5; pointer-events: none; z-index: 9999; }
