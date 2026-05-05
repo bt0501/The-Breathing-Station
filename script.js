@@ -87,3 +87,37 @@ window.addEventListener('DOMContentLoaded', () => {
 
 // Клик для активации звука
 document.body.onclick = () => { if(audioCtx.state === 'suspended') audioCtx.resume(); };
+// Открытие аналитики
+document.getElementById('tape').onclick = () => {
+    document.getElementById('analitics-modal').style.display = "block";
+};
+
+function closeAnalitics() {
+    document.getElementById('analitics-modal').style.display = "none";
+}
+
+// Модифицируем получение данных, чтобы они дублировались в большое окно
+socket.on('market_data', (data) => {
+    const tape = document.getElementById('tape');
+    const fullTape = document.getElementById('full-tape'); // Окно аналитики
+    
+    const row = document.createElement('div');
+    row.className = "pulse-item";
+    const color = data.side === '+' ? 'var(--accent)' : 'var(--danger)';
+    const content = `
+        <span style="color:#848e9c">[${data.time}]</span> 
+        <span style="color:${color}; font-weight:bold">${data.side} $${data.price}</span>
+        <span style="font-size:0.7rem"> V:${data.vol}</span>
+    `;
+    row.innerHTML = content;
+    
+    // В маленькое окно
+    tape.prepend(row.cloneNode(true));
+    if (tape.children.length > 20) tape.removeChild(tape.lastChild);
+    
+    // В окно аналитики (храним больше данных, например 200 строк)
+    fullTape.prepend(row);
+    if (fullTape.children.length > 200) fullTape.removeChild(fullTape.lastChild);
+    
+    document.getElementById('web-hold').innerText = data.hold || 0;
+});
