@@ -164,3 +164,40 @@ document.body.onclick = () => {
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').then(() => console.log("SW Registered"));
 }
+// Твой локальный адрес (Кривой Рог, 192.168.1.118)
+const LOCAL_IP = "http://192.168.1.118:8080";
+const socket = io(LOCAL_IP);
+
+const tape = document.getElementById('tape');
+const status = document.getElementById('status');
+const webHold = document.getElementById('web-hold');
+
+socket.on('connect', () => {
+    status.innerText = "ONLINE (LOCAL)";
+    status.style.color = "#00ff00";
+});
+
+socket.on('connect_error', () => {
+    status.innerText = "OFFLINE";
+    status.style.color = "#ff0000";
+});
+
+socket.on('market_data', (data) => {
+    const row = document.createElement('div');
+    const color = data.side === '+' ? '#00ff00' : '#ff4444';
+    
+    // Выводим время, сторону, цену, объем (V) и количество сделок (T)
+    row.innerHTML = `[${data.time}] <span style="color:${color}">${data.side} $${data.price}</span> | V: ${data.vol} | T: ${data.trades}`;
+    
+    tape.prepend(row);
+    
+    // Ограничиваем количество строк в ленте
+    if (tape.children.length > 15) {
+        tape.removeChild(tape.lastChild);
+    }
+    
+    // Обновляем счетчик заморозки цены
+    if (webHold) {
+        webHold.innerText = data.hold;
+    }
+});
