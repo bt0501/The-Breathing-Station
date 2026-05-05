@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Breathing Station v8.7 - Baitan_0501 白坦</title>
+    <title>The Breathing Station v8.8 - Baitan_0501 白坦</title>
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <link rel="icon" type="image/png" href="https://github.com/bt0501/The-Breathing-Station/blob/main/ico.png?raw=true">
     <link rel="stylesheet" href="style.css">
@@ -16,26 +16,27 @@
     <div class="top-panel">
         <div><div class="label">UTC Time</div><h1 id="utc-time">00:00:00</h1></div>
         <div id="btc-box" class="stat-box"><span class="label">BTC/USDT LIVE</span><span id="btc-price" class="stat-value">$---</span></div>
-        <div class="stat-box"><span class="label">Fear & Greed</span><span id="fg-value" class="stat-value">--</span></div>
+        <div class="stat-box"><span class="label">Fear & Greed</span><span id="fg-value" class="stat-value">50</span></div>
         <div class="stat-box"><span class="label">ETH Gas</span><span id="gas-value" class="stat-value">-- Gwei</span></div>
         <div style="text-align:right"><div class="label">Local Time</div><div id="local-time" style="font-size:1.2rem; font-weight:bold">00:00:00</div></div>
     </div>
 
-    <!-- Исправленные ряды сессий -->
+    <!-- Сессии как на скрине 323: в два ряда -->
     <div class="timeline-wrapper">
         <div id="cursor"></div>
         <div class="time-scale" id="scale"></div>
-        <div class="session-row" id="row-sydney"></div>
-        <div class="session-row" id="row-tokyo"></div>
-        <div class="session-row" id="row-london"></div>
-        <div class="session-row" id="row-newyork"></div>
+        <div class="row" id="row-1"></div>
+        <div class="row" id="row-2"></div>
     </div>
 
     <div class="tools-grid">
         <div class="box">
-            <div class="box-header"><div class="box-title">📡 TERMINAL: <span id="status">OFFLINE</span></div></div>
+            <div class="box-header"><div class="box-title">📡 LIVE TERMINAL: ONLINE</div></div>
             <div id="tape" class="scroll-area"></div>
-            <div class="terminal-footer"><span>HOLD: <b id="web-hold">0</b>s</span><span>Baitan_0501 白坦</span></div>
+            <div class="terminal-footer">
+                <span>HOLD: <b id="web-hold">0</b>s</span>
+                <span>Baitan_0501 白坦</span>
+            </div>
         </div>
 
         <div class="box">
@@ -49,16 +50,15 @@
         </div>
 
         <div class="box">
-            <div class="box-header"><div class="box-title">Новости Криптомира</div></div>
-            <div class="scroll-area" id="rss-news">Загрузка...</div>
+            <div class="box-header"><div class="box-title">CRYPTO NEWS</div></div>
+            <div class="scroll-area" id="rss-news">Загрузка ленты...</div>
         </div>
     </div>
 </div>
 
-<!-- Увеличенное плавающее окно -->
 <div id="analitics-modal" class="modal-float">
     <div class="modal-header">
-        <span>📊 Глубокая Аналитика (1000 тиков)</span>
+        <span>📊 История тиков (1000)</span>
         <span class="close-modal" onclick="closeAnalitics()">×</span>
     </div>
     <div id="full-tape" class="modal-content-scroll"></div>
