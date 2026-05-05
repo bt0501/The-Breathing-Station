@@ -14,7 +14,10 @@
 <div class="main-container">
     <div class="top-panel">
         <div><div class="label">UTC Time</div><h1 id="utc-time">00:00:00</h1></div>
-        <div id="btc-box" class="stat-box"><span class="label">BTC/USDT LIVE</span><span id="btc-price" class="stat-value" style="color: var(--accent);">$---</span></div>
+        <div id="btc-box" class="stat-box">
+            <span class="label">BTC/USDT LIVE</span>
+            <span id="btc-price" class="stat-value" style="color: var(--accent);">$---</span>
+        </div>
         <div class="stat-box"><span class="label">Fear & Greed</span><span id="fg-value" class="stat-value">--</span><span id="fg-text" style="font-size:0.5rem; color:#848e9c;">Loading...</span></div>
         <div class="stat-box"><span class="label">ETH Gas</span><span id="gas-value" class="stat-value" style="color:var(--local)">-- Gwei</span></div>
         <div style="text-align:right"><div class="label">Local Time</div><div id="local-time" style="font-size:1.2rem; font-weight:bold">00:00:00</div></div>
@@ -28,15 +31,16 @@
     </div>
 
     <div class="tools-grid">
-        <!-- ТЕРМИНАЛ -->
+        <!-- ТЕРМИНАЛ (нажми на ленту для аналитики) -->
         <div class="box">
             <div class="box-header">
                 <div class="box-title">📡 LIVE TERMINAL: <span id="status">OFFLINE</span></div>
             </div>
-            <div class="scroll-area" id="tape" style="font-family: 'Courier New', monospace; font-size: 0.85rem;">
-                <div style="color: #848e9c;">Ожидание данных от бота...</div>
+            <!-- Лента сделок -->
+            <div id="tape" class="scroll-area">
+                <div style="color: #848e9c; padding: 10px;">Ожидание данных от бота...</div>
             </div>
-            <div class="terminal-footer" style="padding: 5px 15px; border-top: 1px solid var(--grid); font-size: 0.7rem; display: flex; justify-content: space-between;">
+            <div class="terminal-footer">
                 <span>HOLD: <b id="web-hold">0</b>s</span>
                 <span style="opacity: 0.5;">Baitan_0501 白坦</span>
             </div>
@@ -44,8 +48,13 @@
 
         <!-- ГРАФИК -->
         <div class="box">
-            <div class="box-header"><div class="box-title">BTC/USDT 15M</div><div id="vol-stat" style="font-size: 0.65rem; color: #848e9c;">VOL: ---</div></div>
-            <div style="flex:1; position: relative;"><div id="tradingview_chart" style="height:100%; width:100%;"></div></div>
+            <div class="box-header">
+                <div class="box-title">BTC/USDT 15M</div>
+                <div id="vol-stat" style="font-size: 0.65rem; color: #848e9c;">VOL: ---</div>
+            </div>
+            <div style="flex:1; position: relative;">
+                <div id="tradingview_chart"></div>
+            </div>
             <div class="btn-group">
                 <button class="nav-btn" onclick="window.open('https://aggr.trade/t5k8')">AGGR</button>
                 <button class="nav-btn" onclick="window.open('https://www.coinglass.com/pro/futures/LiquidationMap')">LIQ MAP</button>
@@ -61,14 +70,15 @@
     </div>
 </div>
 
-<div class="watermark">Baitan_0501 白坦</div>
-<audio id="silent-audio" loop preload="auto" style="display:none;"></audio>
-<script src="script.js"></script>
-    <!-- Окно детальной аналитики -->
+<!-- Модальное окно аналитики -->
 <div id="analitics-modal" class="modal">
-    <span class="close-modal" onclick="closeAnalitics()">&times; ЗАФИКСИРОВАТЬ</span>
-    <h2 style="color:var(--accent)">АНАЛИТИКА ПОТОКА</h2>
-    <div id="full-tape" class="modal-content"></div>
+    <div class="close-btn" onclick="closeAnalitics()">ВЕРНУТЬСЯ К ТЕРМИНАЛУ [ESC]</div>
+    <div id="full-tape" class="modal-content">
+        <!-- Сюда JS вставит 200 последних сделок -->
+    </div>
 </div>
+
+<div class="watermark">Baitan_0501 白坦</div>
+<script src="script.js"></script>
 </body>
 </html>
