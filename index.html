@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Breathing Station v8.6 - Baitan_0501 白坦</title>
+    <title>The Breathing Station v8.7 - Baitan_0501 白坦</title>
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <link rel="icon" type="image/png" href="https://github.com/bt0501/The-Breathing-Station/blob/main/ico.png?raw=true">
     <link rel="stylesheet" href="style.css">
@@ -21,11 +21,14 @@
         <div style="text-align:right"><div class="label">Local Time</div><div id="local-time" style="font-size:1.2rem; font-weight:bold">00:00:00</div></div>
     </div>
 
+    <!-- Исправленные ряды сессий -->
     <div class="timeline-wrapper">
         <div id="cursor"></div>
         <div class="time-scale" id="scale"></div>
-        <div class="row" id="row-1"></div>
-        <div class="row" id="row-2"></div>
+        <div class="session-row" id="row-sydney"></div>
+        <div class="session-row" id="row-tokyo"></div>
+        <div class="session-row" id="row-london"></div>
+        <div class="session-row" id="row-newyork"></div>
     </div>
 
     <div class="tools-grid">
@@ -46,16 +49,16 @@
         </div>
 
         <div class="box">
-            <div class="box-header"><div class="box-title">Crypto News</div></div>
-            <div class="scroll-area" id="rss-news">Загрузка ленты...</div>
+            <div class="box-header"><div class="box-title">Новости Криптомира</div></div>
+            <div class="scroll-area" id="rss-news">Загрузка...</div>
         </div>
     </div>
 </div>
 
-<!-- Плавающее окно аналитики -->
+<!-- Увеличенное плавающее окно -->
 <div id="analitics-modal" class="modal-float">
     <div class="modal-header">
-        <span>📊 Аналитика потока (Last 200)</span>
+        <span>📊 Глубокая Аналитика (1000 тиков)</span>
         <span class="close-modal" onclick="closeAnalitics()">×</span>
     </div>
     <div id="full-tape" class="modal-content-scroll"></div>
