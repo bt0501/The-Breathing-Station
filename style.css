@@ -1,42 +1,38 @@
-:root {
-    --bg: #0b0e11; --container-bg: #181a20; --grid: #2b2f36;
-    --text: #eaecef; --accent: #00ff88; --danger: #f23645;
+/* Подпись Baitan_0501 白坦 */
+.signature {
+    position: fixed;
+    bottom: 25px;
+    right: 35px;
+    color: #FFD700; /* Золотой */
+    font-size: 0.8rem;
+    font-weight: bold;
+    text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+    pointer-events: none;
+    z-index: 100;
 }
 
-body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; padding: 15px; }
-.main-container { width: 100%; max-width: 1650px; margin: 0 auto; background: var(--container-bg); padding: 20px; border-radius: 16px; border: 1px solid var(--grid); }
+/* Лента: [Время] Цена Объем Удержание */
+.pulse-item {
+    display: grid;
+    grid-template-columns: 80px 105px 70px 40px;
+    gap: 10px;
+    padding: 6px 12px;
+    border-bottom: 1px solid #2b2f36;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.85rem;
+}
 
-/* Шапка */
-.top-panel { display: grid; grid-template-columns: 1fr auto auto auto 1fr; gap: 20px; align-items: center; margin-bottom: 15px; }
-#utc-time { font-size: 3rem; font-weight: 900; color: var(--accent); margin: 0; line-height: 1; }
-.stat-box { background: #1e2329; padding: 10px 20px; border-radius: 12px; border: 1px solid var(--grid); }
+/* Окно аналитики (теперь перемещаемое) */
+.modal-float {
+    display: none;
+    position: absolute; /* Для Drag & Drop */
+    top: 200px; left: 50%; width: 500px; height: 600px;
+    background: #181a20; border: 1px solid var(--accent);
+    border-radius: 12px; z-index: 9999; box-shadow: 0 0 50px #000;
+}
+.modal-header { cursor: move; background: #1e2329; padding: 12px; display: flex; justify-content: space-between; border-bottom: 1px solid var(--grid); }
 
-/* Сессии (Два ряда как на 323) */
-.timeline-wrapper { position: relative; background: #0b0e11; border: 1px solid var(--grid); border-radius: 8px; margin-bottom: 20px; padding: 5px 0; }
-.time-scale { display: flex; height: 20px; border-bottom: 1px solid var(--grid); margin-bottom: 5px; }
-.hour-mark { flex: 1; font-size: 0.65rem; color: #848e9c; text-align: center; border-left: 1px solid rgba(255,255,255,0.05); }
-.row { position: relative; height: 28px; margin-bottom: 4px; width: 100%; }
-.bar { position: absolute; height: 100%; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 900; color: white; opacity: 0.25; text-transform: uppercase; }
-.bar.active { opacity: 1; box-shadow: 0 0 15px rgba(255,255,255,0.1); }
+/* Остальное из v8.8 оставляем */
+.bar { position: absolute; height: 100%; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; font-weight: 900; color: white; opacity: 0.2; }
+.bar.active { opacity: 1; }
 .sydney { background: #9c27b0; } .tokyo { background: #f0b90b; color: #000; } .london { background: #3267ff; } .newyork { background: #f23645; }
-#cursor { position: absolute; top: 0; bottom: 0; width: 2px; background: #f23645; z-index: 100; box-shadow: 0 0 10px #f23645; }
-
-/* Лента: Порядок [Время] | Цена | Объем | Удержание */
-.pulse-item { 
-    display: grid; 
-    grid-template-columns: 85px 110px 75px 45px; 
-    gap: 8px; 
-    padding: 6px 12px; 
-    border-bottom: 1px solid #2b2f36; 
-    font-family: 'Roboto Mono', monospace; 
-    font-size: 0.85rem; 
-}
-
-.tools-grid { display: grid; grid-template-columns: 360px 1fr 320px; gap: 15px; height: 600px; }
-.box { background: #1e2329; border-radius: 12px; border: 1px solid var(--grid); display: flex; flex-direction: column; overflow: hidden; }
-.scroll-area { flex: 1; overflow-y: auto; }
-
-/* Аналитика */
-.modal-float { display: none; position: fixed; top: 10%; left: 50%; transform: translateX(-50%); width: 600px; height: 75vh; background: #181a20; border: 1px solid var(--accent); border-radius: 15px; z-index: 1000; box-shadow: 0 0 100px rgba(0,0,0,0.9); }
-.modal-header { padding: 15px; background: #1e2329; display: flex; justify-content: space-between; border-bottom: 1px solid var(--grid); }
-.close-modal { cursor: pointer; color: var(--danger); font-size: 1.5rem; }
