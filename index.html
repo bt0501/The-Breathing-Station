@@ -74,5 +74,19 @@
 <script src="script.js"></script>
     <!-- Добавить перед <script src="script.js"></script> -->
 <audio id="silent-audio" loop preload="auto" style="display:none;"></audio>
+    <!-- В <head> или перед твоим script.js -->
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
+<!-- В нужное место в <body> -->
+<div id="trading-terminal">
+    <h4>📡 LIVE TERMINAL: <span id="status">OFFLINE</span></h4>
+    <div id="tape">
+        <!-- Сюда будут лететь сделки -->
+    </div>
+    <div class="terminal-footer">
+        <span>HOLD: <b id="web-hold">0</b>s</span>
+        <span>ID: Baitan_0501 白坦</span>
+    </div>
+</div>
 </body>
 </html>
