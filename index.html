@@ -8,18 +8,16 @@
     <link rel="icon" type="image/png" href="https://github.com/bt0501/The-Breathing-Station/blob/main/ico.png?raw=true">
     <link rel="stylesheet" href="style.css">
     <script src="https://s3.tradingview.com/tv.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/rss-parser@3.12.0/dist/rss-parser.min.js"></script>
 </head>
 <body>
 
 <div class="main-container">
     <div class="top-panel">
         <div><div class="label">UTC Time</div><h1 id="utc-time">00:00:00</h1></div>
-        <div id="btc-box" class="stat-box">
-            <span class="label">BTC/USDT LIVE</span>
-            <span id="btc-price" class="stat-value" style="color: var(--accent);">$---</span>
-        </div>
-        <div class="stat-box"><span class="label">Fear & Greed</span><span id="fg-value" class="stat-value">--</span><span id="fg-text" style="font-size:0.5rem; color:#848e9c;">Loading...</span></div>
-        <div class="stat-box"><span class="label">ETH Gas</span><span id="gas-value" class="stat-value" style="color:var(--local)">-- Gwei</span></div>
+        <div id="btc-box" class="stat-box"><span class="label">BTC/USDT LIVE</span><span id="btc-price" class="stat-value">$---</span></div>
+        <div class="stat-box"><span class="label">Fear & Greed</span><span id="fg-value" class="stat-value">--</span></div>
+        <div class="stat-box"><span class="label">ETH Gas</span><span id="gas-value" class="stat-value">-- Gwei</span></div>
         <div style="text-align:right"><div class="label">Local Time</div><div id="local-time" style="font-size:1.2rem; font-weight:bold">00:00:00</div></div>
     </div>
 
@@ -31,30 +29,15 @@
     </div>
 
     <div class="tools-grid">
-        <!-- ТЕРМИНАЛ (нажми на ленту для аналитики) -->
         <div class="box">
-            <div class="box-header">
-                <div class="box-title">📡 LIVE TERMINAL: <span id="status">OFFLINE</span></div>
-            </div>
-            <!-- Лента сделок -->
-            <div id="tape" class="scroll-area">
-                <div style="color: #848e9c; padding: 10px;">Ожидание данных от бота...</div>
-            </div>
-            <div class="terminal-footer">
-                <span>HOLD: <b id="web-hold">0</b>s</span>
-                <span style="opacity: 0.5;">Baitan_0501 白坦</span>
-            </div>
+            <div class="box-header"><div class="box-title">📡 TERMINAL: <span id="status">OFFLINE</span></div></div>
+            <div id="tape" class="scroll-area"></div>
+            <div class="terminal-footer"><span>HOLD: <b id="web-hold">0</b>s</span><span>Baitan_0501 白坦</span></div>
         </div>
 
-        <!-- ГРАФИК -->
         <div class="box">
-            <div class="box-header">
-                <div class="box-title">BTC/USDT 15M</div>
-                <div id="vol-stat" style="font-size: 0.65rem; color: #848e9c;">VOL: ---</div>
-            </div>
-            <div style="flex:1; position: relative;">
-                <div id="tradingview_chart"></div>
-            </div>
+            <div class="box-header"><div class="box-title">BTC/USDT 15M</div><div id="vol-stat">VOL: ---</div></div>
+            <div style="flex:1; position: relative;"><div id="tradingview_chart" style="height:100%; width:100%;"></div></div>
             <div class="btn-group">
                 <button class="nav-btn" onclick="window.open('https://aggr.trade/t5k8')">AGGR</button>
                 <button class="nav-btn" onclick="window.open('https://www.coinglass.com/pro/futures/LiquidationMap')">LIQ MAP</button>
@@ -62,7 +45,6 @@
             </div>
         </div>
 
-        <!-- НОВОСТИ -->
         <div class="box">
             <div class="box-header"><div class="box-title">Crypto News</div></div>
             <div class="scroll-area" id="rss-news">Загрузка ленты...</div>
@@ -70,15 +52,15 @@
     </div>
 </div>
 
-<!-- Модальное окно аналитики -->
-<div id="analitics-modal" class="modal">
-    <div class="close-btn" onclick="closeAnalitics()">ВЕРНУТЬСЯ К ТЕРМИНАЛУ [ESC]</div>
-    <div id="full-tape" class="modal-content">
-        <!-- Сюда JS вставит 200 последних сделок -->
+<!-- Плавающее окно аналитики -->
+<div id="analitics-modal" class="modal-float">
+    <div class="modal-header">
+        <span>📊 Аналитика потока (Last 200)</span>
+        <span class="close-modal" onclick="closeAnalitics()">×</span>
     </div>
+    <div id="full-tape" class="modal-content-scroll"></div>
 </div>
 
-<div class="watermark">Baitan_0501 白坦</div>
 <script src="script.js"></script>
 </body>
 </html>
