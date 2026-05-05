@@ -52,36 +52,54 @@ body {
 .london { background: var(--london); } .newyork { background: var(--newyork); }
 
 /* Убеждаемся, что сетка не ломает график на узких экранах */
+/* СЕТКА ДЛЯ ПК */
 .tools-grid { 
     display: grid; 
-    grid-template-columns: 320px 1fr 320px; 
+    grid-template-columns: 350px 1fr 320px; /* Четкие размеры боковых панелей */
     gap: 15px; 
-    min-height: 600px; 
+    height: calc(100vh - 250px); /* Авто-высота под размер экрана */
+    min-height: 600px;
+    align-items: stretch;
 }
 
-/* ФИКС ДЛЯ ТЕЛЕФОНА: если экран узкий, выстраиваем всё в колонку */
+/* СТРОГАЯ СТРОЧКА В ЛЕНТЕ (чтобы не было "то слева, то справа") */
+.pulse-item {
+    display: grid;
+    grid-template-columns: 85px 110px 60px 40px 1fr; /* Фиксированные колонки внутри строки */
+    align-items: center;
+    gap: 5px;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--grid);
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+/* Поправка для блоков */
+.box { 
+    background: #1e2329; 
+    border-radius: 12px; 
+    border: 1px solid var(--grid); 
+    display: flex; 
+    flex-direction: column; 
+    overflow: hidden; 
+    height: 100%; /* Чтобы блоки заполняли сетку */
+}
+
+/* МОБИЛЬНАЯ ВЕРСИЯ (не ломает десктоп) */
 @media (max-width: 1000px) {
-    .main-container { padding: 10px; width: 100%; border-radius: 0; }
     .tools-grid {
-        grid-template-columns: 1fr !important; /* Всё в одну колонку */
+        grid-template-columns: 1fr !important;
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        height: auto;
     }
-
-    /* Ограничиваем терминал на телефоне, чтобы он не съедал экран */
-    .box:first-child { 
-        height: 250px !important; 
-        order: 1; /* Терминал сверху */
+    .box:first-child { height: 250px !important; order: 1; }
+    .box:nth-child(2) { height: 450px !important; order: 2; }
+    .pulse-item {
+        grid-template-columns: 75px 100px 50px 35px 1fr; /* Чуть уже для мобилок */
+        font-size: 0.75rem;
     }
-
-    .box:nth-child(2) { 
-        height: 450px !important; 
-        order: 2; /* График под ним */
-    }
-
-    #utc-time { font-size: 1.8rem; }
-    .top-panel { grid-template-columns: 1fr 1fr; gap: 5px; }
 }
 
 /* Стиль для модального окна аналитики */
