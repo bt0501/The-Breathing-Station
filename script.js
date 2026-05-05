@@ -59,13 +59,27 @@ socket.on('connect', () => {
 
 socket.on('market_data', (data) => {
     const tape = document.getElementById('tape');
+    const color = data.side === '+' ? 'var(--accent)' : 'var(--danger)';
+    
+    // Формируем контент так, чтобы он попадал в grid-columns из CSS
+    const rowHTML = `
+        <span style="color:#848e9c">[${data.time}]</span>
+        <span style="color:${color}; font-weight:bold">${data.side} ${data.price}</span>
+        <span style="color:var(--text); text-align:right">${data.vol}</span>
+        <span style="color:#848e9c; text-align:center">(${data.count || 1})</span>
+        <span style="color:var(--local); text-align:right">${data.hold || 0}s</span>
+    `;
+
     const row = document.createElement('div');
     row.className = "pulse-item";
-    const color = data.side === '+' ? 'var(--accent)' : 'var(--danger)';
-    row.innerHTML = `<span style="color:#848e9c">[${data.time}]</span> <span style="color:${color}; font-weight:bold">${data.side} $${data.price}</span>`;
+    row.innerHTML = rowHTML;
+
     tape.prepend(row);
-    if (tape.children.length > 30) tape.removeChild(tape.lastChild);
-    document.getElementById('web-hold').innerText = data.hold || 0;
+    if (tape.children.length > 20) tape.removeChild(tape.lastChild);
+
+    // Сохраняем для аналитики (в массив)
+    tradesHistory.unshift(rowHTML);
+    if (tradesHistory.length > 200) tradesHistory.pop();
 });
 
 // --- ЗАПУСК ---
